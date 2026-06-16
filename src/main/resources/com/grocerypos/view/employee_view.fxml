@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TableColumn?>
+
+<VBox prefWidth="1024.0" prefHeight="768.0" style="-fx-background-color: #111111;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.grocerypos.controller.EmployeeController">
+
+    <HBox spacing="20" style="-fx-background-color: #1a252f; -fx-padding: 10;" alignment="CENTER_LEFT">
+        <Label text="GroceryPOS v0.1.0" style="-fx-text-fill: #bdc3c7; -fx-font-weight: bold;"/>
+        <Label text="Store #4021 - Springfield" style="-fx-text-fill: #bdc3c7;"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="lblEmployee" text="Operator: Not Authenticated" style="-fx-text-fill: #3498db; -fx-font-weight: bold;"/>
+        <Label fx:id="lblClock" text="00:00:00" style="-fx-text-fill: #2ecc71; -fx-font-family: 'Courier New'; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+    </HBox>
+
+    <StackPane VBox.vgrow="ALWAYS">
+
+        <VBox fx:id="paneAd" alignment="CENTER" style="-fx-background-color: #0d2c16;" onMouseClicked="#handleAdClick">
+            <Label text="WOOLWORTHS ENTERPRISE POS" style="-fx-text-fill: #2ecc71; -fx-font-size: 32px; -fx-font-weight: bold;"/>
+            <Label text="[ REGISTER IDLE - TAP MONITOR TO BEGIN OUTLET SESSION ]" style="-fx-text-fill: white; -fx-font-size: 14px;"/>
+        </VBox>
+
+        <HBox fx:id="paneLogin" visible="false" alignment="CENTER" spacing="50" style="-fx-background-color: #2c3e50;">
+            <VBox alignment="CENTER" spacing="15">
+                <Label text="WOOLWORTHS" style="-fx-text-fill: #2ecc71; -fx-font-size: 40px; -fx-font-weight: bold;"/>
+                <Label text="Store System Terminal Gateway" style="-fx-text-fill: #bdc3c7;"/>
+            </VBox>
+            <VBox alignment="CENTER" spacing="15" style="-fx-background-color: #34495e; -fx-padding: 30; -fx-background-radius: 8;">
+                <Label text="Secure Portal Authentication" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                <Button text="INITIALIZE LOGIN SEQUENCE" onAction="#handleLoginClick" style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 12 24;"/>
+            </VBox>
+        </HBox>
+
+        <VBox fx:id="paneCredentials" visible="false" alignment="CENTER" spacing="20" style="-fx-background-color: #2c3e50;">
+            <VBox maxWidth="400" spacing="15" style="-fx-background-color: #34495e; -fx-padding: 30; -fx-background-radius: 8;">
+                <Label text="ENTER OPERATOR ID NUMBER" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                <TextField fx:id="txtUsername" />
+                <PasswordField fx:id="txtPassword" />
+
+                <GridPane hgap="10" vgap="10" alignment="CENTER">
+                    <Button text="1" onAction="#handleCredNum" prefWidth="60" prefHeight="40" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                    <Button text="2" onAction="#handleCredNum" prefWidth="60" prefHeight="40" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                    <Button text="3" onAction="#handleCredNum" prefWidth="60" prefHeight="40" GridPane.columnIndex="2" GridPane.rowIndex="0"/>
+                    <Button text="4" onAction="#handleCredNum" prefWidth="60" prefHeight="40" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                    <Button text="5" onAction="#handleCredNum" prefWidth="60" prefHeight="40" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                    <Button text="6" onAction="#handleCredNum" prefWidth="60" prefHeight="40" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
+                    <Button text="7" onAction="#handleCredNum" prefWidth="60" prefHeight="40" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                    <Button text="8" onAction="#handleCredNum" prefWidth="60" prefHeight="40" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                    <Button text="9" onAction="#handleCredNum" prefWidth="60" prefHeight="40" GridPane.columnIndex="2" GridPane.rowIndex="2"/>
+                    <Button text="0" onAction="#handleCredNum" prefWidth="60" prefHeight="40" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                    <Button text="CLR" onAction="#handleCredClear" prefWidth="60" prefHeight="40" style="-fx-background-color: #e74c3c; -fx-text-fill: white;" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                    <Button text="ENT" onAction="#handleCredSubmit" prefWidth="60" prefHeight="40" style="-fx-background-color: #2ecc71; -fx-text-fill: white;" GridPane.columnIndex="2" GridPane.rowIndex="3"/>
+                </GridPane>
+            </VBox>
+        </VBox>
+
+        <VBox fx:id="paneLoading" visible="false" alignment="CENTER" spacing="15" style="-fx-background-color: #111111;">
+            <ProgressIndicator prefWidth="60" prefHeight="60"/>
+            <Label text="Allocating Session Infrastructure. Please standby..." style="-fx-text-fill: #95a5a6;"/>
+        </VBox>
+
+        <VBox fx:id="paneMainPOS" visible="false">
+            <HBox VBox.vgrow="ALWAYS">
+                <VBox HBox.hgrow="ALWAYS" prefWidth="600" style="-fx-padding: 15; -fx-background-color: #1c2833;">
+                    <TableView fx:id="tableCart" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="colName" text="Item Name (Abbrv)" prefWidth="240"/>
+                            <TableColumn fx:id="colQty" text="Qty" prefWidth="60"/>
+                            <TableColumn fx:id="colUnitPrice" text="Unit Price" prefWidth="100"/>
+                            <TableColumn fx:id="colLineTotal" text="Line Total" prefWidth="120"/>
+                        </columns>
+                    </TableView>
+                    <HBox alignment="CENTER_RIGHT" style="-fx-padding: 10 0 0 0;">
+                        <Label text="RUNNING BALANCE DUE: " style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+                        <Label fx:id="lblTotalBalance" text="/$0.00" style="-fx-text-fill: #2ecc71; -fx-font-size: 28px; -fx-font-weight: bold;"/>
+                    </HBox>
+                </VBox>
+
+                <VBox prefWidth="424" style="-fx-padding: 15; -fx-background-color: #2c3e50;" spacing="15">
+                    <Label text="MANUAL PRODUCT REGISTRY INPUT" style="-fx-text-fill: #bdc3c7; -fx-font-weight: bold;"/>
+                    <HBox spacing="10">
+                        <TextField fx:id="txtScannerBuffer" HBox.hgrow="ALWAYS" />
+                        <Button text="ENTER CODE" onAction="#handleManualScan" style="-fx-background-color: #3498db; -fx-text-fill: white;"/>
+                    </HBox>
+
+                    <!-- HOTKEY QUICK SIMULATOR TRIGGERS block removed — moved to debug window -->
+
+                    <Label text="ITEM QUANTITY MULTIPLIER NUMPAD" style="-fx-text-fill: #bdc3c7; -fx-font-weight: bold;"/>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Pending Multiplier Scale:" style="-fx-text-fill: white;"/>
+                        <Label fx:id="lblMultiplierScale" text="1" style="-fx-text-fill: #e67e22; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+                    </HBox>
+                    <GridPane hgap="10" vgap="10" alignment="CENTER">
+                        <Button text="1" onAction="#handlePOSNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                        <Button text="2" onAction="#handlePOSNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                        <Button text="3" onAction="#handlePOSNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="2" GridPane.rowIndex="0"/>
+                        <Button text="4" onAction="#handlePOSNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                        <Button text="5" onAction="#handlePOSNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                        <Button text="6" onAction="#handlePOSNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
+                        <Button text="7" onAction="#handlePOSNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                        <Button text="8" onAction="#handlePOSNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                        <Button text="9" onAction="#handlePOSNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="2" GridPane.rowIndex="2"/>
+                        <Button text="0" onAction="#handlePOSNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                        <Button text="QTY" onAction="#handlePOSQtyApply" prefWidth="70" prefHeight="50" style="-fx-background-color: #e67e22; -fx-text-fill: white;" GridPane.columnIndex="2" GridPane.rowIndex="3"/>
+                        <Button text="CLR" onAction="#handlePOSClear" prefWidth="70" prefHeight="50" style="-fx-background-color: #95a5a6;" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                    </GridPane>
+
+                    <Region VBox.vgrow="ALWAYS"/>
+                    <HBox spacing="10">
+                        <Button text="CASH SALE" onAction="#handlePaymentAction" prefWidth="150" prefHeight="60" style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                        <Button text="EFTPOS CARD" onAction="#handlePaymentAction" prefWidth="150" prefHeight="60" style="-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                    </HBox>
+                </VBox>
+            </HBox>
+
+            <HBox style="-fx-background-color: #1a252f; -fx-padding: 10;" spacing="15" alignment="CENTER_LEFT">
+                <Button text="📂 Open Drawer" onAction="#handleDockAction" style="-fx-background-color: #34495e; -fx-text-fill: white;"/>
+                <Button text="🖨️ Print Docket" onAction="#handleDockAction" style="-fx-background-color: #34495e; -fx-text-fill: white;"/>
+                <Button text="🎫 User Barcode" onAction="#handleDockAction" style="-fx-background-color: #34495e; -fx-text-fill: white;"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="❌ Secure Logout" onAction="#handleLogoutSequence" style="-fx-background-color: #c0392b; -fx-text-fill: white; -fx-font-weight: bold;"/>
+            </HBox>
+        </VBox>
+    </StackPane>
+</VBox>
