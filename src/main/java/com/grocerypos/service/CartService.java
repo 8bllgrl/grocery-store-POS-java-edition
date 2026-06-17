@@ -1,5 +1,7 @@
 package com.grocerypos.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grocerypos.model.CartItem;
 import com.grocerypos.model.Product;
 import javafx.collections.FXCollections;
@@ -21,39 +23,39 @@ public class CartService {
     private final Map<String, Product> mockDatabase = new HashMap<>();
     private int currentMultiplier = 1;
 
-//    public CartService() {
-//        loadCatalogFromJson();
-//    }
+    public CartService() {
+        loadCatalogFromJson();
+    }
 
-//    private void loadCatalogFromJson() {
-//        ObjectMapper mapper = new ObjectMapper();
-//
-//        // Dynamically extract data stream from application resources
-//        try (InputStream is = getClass().getResourceAsStream("/com/grocerypos/data/products.json")) {
-//            if (is == null) {
-//                System.err.println("Critical Error: products.json resource file not found!");
-//                return;
-//            }
-//
-//            // Deserializing JSON list directly into a List of Product instances
-//            List<Product> products = mapper.readValue(is, new TypeReference<List<Product>>() {});
-//
-//            // Re-populate the live operational map [cite: 136]
-//            for (Product p : products) {
-//                mockDatabase.put(p.getBarcode(), p);
-//            }
-//
-//            System.out.println("[SYSTEM] Successfully parsed " + mockDatabase.size() + " items from JSON via Jackson.");
-//
-//        } catch (Exception e) {
-//            System.err.println("Critical Failure mapping local JSON matrix payload.");
-//            e.printStackTrace();
-//        }
-//    }
-//
-//    public Collection<Product> getAllProducts() {
-//        return mockDatabase.values();
-//    }
+    private void loadCatalogFromJson() {
+        ObjectMapper mapper = new ObjectMapper();
+
+        // Dynamically extract data stream from application resources
+        try (InputStream is = getClass().getResourceAsStream("/com/grocerypos/data/products.json")) {
+            if (is == null) {
+                System.err.println("Critical Error: products.json resource file not found!");
+                return;
+            }
+
+            // Deserializing JSON list directly into a List of Product instances
+            List<Product> products = mapper.readValue(is, new TypeReference<List<Product>>() {});
+
+            // Re-populate the live operational map [cite: 136]
+            for (Product p : products) {
+                mockDatabase.put(p.getBarcode(), p);
+            }
+
+            System.out.println("[SYSTEM] Successfully parsed " + mockDatabase.size() + " items from JSON via Jackson.");
+
+        } catch (Exception e) {
+            System.err.println("Critical Failure mapping local JSON matrix payload.");
+            e.printStackTrace();
+        }
+    }
+
+    public Collection<Product> getAllProducts() {
+        return mockDatabase.values();
+    }
 
     public ObservableList<CartItem> getActiveCart() { return activeCart; }
 
