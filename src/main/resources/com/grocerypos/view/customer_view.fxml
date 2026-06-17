@@ -6,21 +6,39 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 
-<StackPane prefWidth="600.0" prefHeight="768.0" style="-fx-background-color: #2c3e50;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.grocerypos.controller.CustomerController">
+<!--
+    Customer-facing display.
+    No components extracted here — this view has no reused sub-structures.
+    CustomerController.syncDisplayView() drives all updates from the shared CartService.
+-->
+<StackPane prefWidth="600.0" prefHeight="768.0"
+    style="-fx-background-color: #2c3e50;"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.grocerypos.controller.CustomerController">
 
-    <VBox fx:id="customerIdlePane" alignment="CENTER" spacing="20" style="-fx-background-color: #115329;">
-        <Label text="WOOLWORTHS" style="-fx-text-fill: white; -fx-font-size: 38px; -fx-font-weight: bold;"/>
-        <Label text="Fresh Food People - Session Idle" style="-fx-text-fill: #ecc94b; -fx-font-size: 16px;"/>
+    <VBox fx:id="customerIdlePane" alignment="CENTER" spacing="20"
+        style="-fx-background-color: #115329;">
+        <Label text="WOOLWORTHS"
+            style="-fx-text-fill: white; -fx-font-size: 38px; -fx-font-weight: bold;"/>
+        <Label text="Fresh Food People - Session Idle"
+            style="-fx-text-fill: #ecc94b; -fx-font-size: 16px;"/>
     </VBox>
 
-    <VBox fx:id="customerActivePane" visible="false" style="-fx-padding: 20;" spacing="15">
+    <VBox fx:id="customerActivePane" visible="false"
+        style="-fx-padding: 20;" spacing="15">
         <HBox style="-fx-background-color: #1a252f; -fx-padding: 10;" alignment="CENTER_LEFT">
             <Label text="CURRENT CART MATRIX" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
         </HBox>
-        <ListView fx:id="listItemsView" VBox.vgrow="ALWAYS" style="-fx-font-size: 16px; -fx-font-family: 'Courier New';"/>
-        <HBox alignment="CENTER_RIGHT" style="-fx-padding: 15; -fx-background-color: #1a252f;">
-            <Label text="TOTAL TO PAY: " style="-fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;"/>
-            <Label fx:id="lblCustomerTotal" text="\$0.00" style="-fx-text-fill: #2ecc71; -fx-font-size: 28px; -fx-font-weight: bold;"/>
+        <ListView fx:id="listItemsView" VBox.vgrow="ALWAYS"
+            style="-fx-font-size: 16px; -fx-font-family: 'Courier New';"/>
+        <HBox alignment="CENTER_RIGHT"
+            style="-fx-padding: 15; -fx-background-color: #1a252f;">
+            <Label text="TOTAL TO PAY: "
+                style="-fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;"/>
+            <Label fx:id="lblCustomerTotal" text="/$0.00"
+                style="-fx-text-fill: #2ecc71; -fx-font-size: 28px; -fx-font-weight: bold;"/>
         </HBox>
     </VBox>
+
 </StackPane>

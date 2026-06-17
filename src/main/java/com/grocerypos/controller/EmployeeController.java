@@ -1,24 +1,40 @@
 package com.grocerypos.controller;
 
+import com.grocerypos.controller.component.NumpadController;
+import com.grocerypos.controller.component.StatusBarController;
+import com.grocerypos.controller.component.TopBarController;
 import com.grocerypos.model.CartItem;
 import com.grocerypos.service.CartService;
-import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.util.Duration;
 import java.math.BigDecimal;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 
 public class EmployeeController {
 
-    @FXML private Label lblClock;
-    @FXML private Label lblEmployee;
+    // ── Component sub-controllers (injected by JavaFX from fx:include) ───────
+    // Naming convention: fx:id="posNumpad" → field name "posNumpad" + "posNumpadController"
+
+    @FXML private HBox topBar;
+    @FXML private TopBarController topBarController;
+
+    @FXML private HBox statusBar;
+    @FXML private StatusBarController statusBarController;
+
+    @FXML private GridPane posNumpad;
+    @FXML private NumpadController posNumpadController;
+
+    @FXML private GridPane credNumpad;
+    @FXML private NumpadController credNumpadController;
+
+    // ── Own FXML fields ──────────────────────────────────────────────────────
+
     @FXML private Label lblMultiplierScale;
     @FXML private Label lblTotalBalance;
 
@@ -33,13 +49,11 @@ public class EmployeeController {
     @FXML private PasswordField txtPassword;
 
     @FXML private TableView<CartItem> tableCart;
-    @FXML private TableColumn<CartItem, String> colName;
-    @FXML private TableColumn<CartItem, Integer> colQty;
+    @FXML private TableColumn<CartItem, String>     colName;
+    @FXML private TableColumn<CartItem, Integer>    colQty;
     @FXML private TableColumn<CartItem, BigDecimal> colUnitPrice;
     @FXML private TableColumn<CartItem, BigDecimal> colLineTotal;
 
-    // Tracks which credential field the numpad should write to, since
-    // clicking a button steals JavaFX focus before the handler fires.
     private enum CredFocus { USERNAME, PASSWORD }
     private CredFocus credFocus = CredFocus.USERNAME;
 
@@ -47,12 +61,13 @@ public class EmployeeController {
     private CustomerController customerController;
     private final StringBuilder inputAccumulator = new StringBuilder();
 
+    // ── Lifecycle ────────────────────────────────────────────────────────────
+
     @FXML
     public void initialize() {
-        startClockRunner();
         configureTableMapping();
+        wireComponents();
 
-        // Keep credFocus in sync when the user directly clicks a field.
         txtUsername.setOnMouseClicked(e -> credFocus = CredFocus.USERNAME);
         txtPassword.setOnMouseClicked(e -> credFocus = CredFocus.PASSWORD);
     }
@@ -66,14 +81,47 @@ public class EmployeeController {
         this.customerController = target;
     }
 
-    private void startClockRunner() {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss");
-        Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
-            if (lblClock != null) lblClock.setText(LocalTime.now().format(dtf));
-        }));
-        timeline.setCycleCount(Animation.INDEFINITE);
-        timeline.play();
+    // ── Component wiring (equivalent to passing props) ───────────────────────
+
+    private void wireComponents() {
+
+        // TopBar — no callbacks needed, it manages its own clock
+        // topBarController is ready to use immediately
+
+        // StatusBar callbacks
+        statusBarController.configure(
+            () -> System.out.println("Invoking Peripheral Sequence Trigger: Open Drawer"),
+            () -> System.out.println("Invoking Peripheral Sequence Trigger: Print Docket"),
+            () -> System.out.println("Invoking Peripheral Sequence Trigger: User Barcode"),
+            this::handleLogoutSequence
+        );
+
+        // POS numpad — quantity multiplier entry
+        posNumpadController.configure(
+            digit -> {
+                inputAccumulator.append(digit);
+                lblMultiplierScale.setText(inputAccumulator.toString());
+            },
+            this::handlePOSClear,
+            this::handlePOSQtyApply,
+            "QTY", "#e67e22",
+            "CLR", "#95a5a6"
+        );
+
+        // Credential numpad — login PIN entry
+        credNumpadController.configure(
+            digit -> {
+                if (credFocus == CredFocus.USERNAME) txtUsername.appendText(digit);
+                else                                 txtPassword.appendText(digit);
+            },
+            this::handleCredClear,
+            this::handleCredSubmit,
+            "ENT", "#2ecc71",
+            "CLR", "#e74c3c"
+        );
     }
+
+    // ── Table setup ──────────────────────────────────────────────────────────
 
     private void configureTableMapping() {
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
@@ -82,35 +130,29 @@ public class EmployeeController {
         colLineTotal.setCellValueFactory(new PropertyValueFactory<>("lineTotal"));
     }
 
-    // ── STATE TRANSITIONS ────────────────────────────────────────────────────
+    // ── State transitions ────────────────────────────────────────────────────
 
     @FXML void handleAdClick(MouseEvent event) {
         paneAd.setVisible(false);
         paneLogin.setVisible(true);
     }
 
-    @FXML void handleLoginClick(ActionEvent event) {
+    @FXML void handleLoginClick() {
         paneLogin.setVisible(false);
         paneCredentials.setVisible(true);
         credFocus = CredFocus.USERNAME;
     }
 
-    @FXML void handleCredNum(ActionEvent event) {
-        Button btn = (Button) event.getSource();
-        if (credFocus == CredFocus.USERNAME) txtUsername.appendText(btn.getText());
-        else                                 txtPassword.appendText(btn.getText());
-    }
-
-    @FXML void handleCredClear() {
+    private void handleCredClear() {
         txtUsername.clear();
         txtPassword.clear();
         credFocus = CredFocus.USERNAME;
     }
 
-    @FXML void handleCredSubmit() {
+    private void handleCredSubmit() {
         String uid = txtUsername.getText();
         if (uid == null || uid.isEmpty()) uid = "Teller #104";
-        lblEmployee.setText("Operator: " + uid);
+        topBarController.setOperatorName(uid);
 
         paneCredentials.setVisible(false);
         paneLoading.setVisible(true);
@@ -122,21 +164,15 @@ public class EmployeeController {
         })).play();
     }
 
-    // ── MAIN POS ACTIONS ────────────────────────────────────────────────────
+    // ── Main POS actions ─────────────────────────────────────────────────────
 
-    @FXML void handlePOSNum(ActionEvent event) {
-        Button btn = (Button) event.getSource();
-        inputAccumulator.append(btn.getText());
-        lblMultiplierScale.setText(inputAccumulator.toString());
-    }
-
-    @FXML void handlePOSClear() {
+    private void handlePOSClear() {
         inputAccumulator.setLength(0);
         lblMultiplierScale.setText("1");
         if (cartService != null) cartService.setMultiplier(1);
     }
 
-    @FXML void handlePOSQtyApply() {
+    private void handlePOSQtyApply() {
         if (inputAccumulator.length() > 0) {
             cartService.setMultiplier(Integer.parseInt(inputAccumulator.toString()));
             inputAccumulator.setLength(0);
@@ -148,10 +184,7 @@ public class EmployeeController {
         txtScannerBuffer.clear();
     }
 
-    /**
-     * Called by DebugController when a catalog button is pressed.
-     * Public so it can be reached from the separate debug window.
-     */
+    /** Called by DebugController. Public so it can be reached from the separate debug window. */
     public void triggerDebugScan(String barcode) {
         processScan(barcode);
     }
@@ -168,7 +201,7 @@ public class EmployeeController {
         }
     }
 
-    @FXML void handlePaymentAction(ActionEvent event) {
+    @FXML void handlePaymentAction(javafx.event.ActionEvent event) {
         String total = lblTotalBalance != null ? lblTotalBalance.getText() : "$0.00";
         new Alert(Alert.AlertType.INFORMATION,
                 "Processing transaction via: " + ((Button) event.getSource()).getText()
@@ -178,14 +211,10 @@ public class EmployeeController {
         if (customerController != null) customerController.syncDisplayView();
     }
 
-    @FXML void handleDockAction(ActionEvent event) {
-        System.out.println("Invoking Peripheral Sequence Trigger: " + ((Button) event.getSource()).getText());
-    }
-
-    @FXML void handleLogoutSequence() {
+    private void handleLogoutSequence() {
         paneMainPOS.setVisible(false);
         paneAd.setVisible(true);
-        lblEmployee.setText("Operator: Not Authenticated");
+        topBarController.setOperatorName("Not Authenticated");
         handlePOSClear();
         cartService.clearCart();
         if (customerController != null) customerController.setCustomerStateActive(false);

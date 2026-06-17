@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.control.Button?>
+
+<!--
+    StatusBarComponent — bottom dock bar with peripheral actions and logout.
+    Parent calls StatusBarController.configure() to inject all button callbacks.
+-->
+<HBox
+    style="-fx-background-color: #1a252f; -fx-padding: 10;"
+    spacing="15"
+    alignment="CENTER_LEFT"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.grocerypos.controller.component.StatusBarController">
+
+    <Button text="📂 Open Drawer"  onAction="#handleOpenDrawer"  style="-fx-background-color: #34495e; -fx-text-fill: white;"/>
+    <Button text="🖨️ Print Docket" onAction="#handlePrintDocket" style="-fx-background-color: #34495e; -fx-text-fill: white;"/>
+    <Button text="🎫 User Barcode" onAction="#handleUserBarcode" style="-fx-background-color: #34495e; -fx-text-fill: white;"/>
+    <Region HBox.hgrow="ALWAYS"/>
+    <Button text="❌ Secure Logout" onAction="#handleLogout"
+        style="-fx-background-color: #c0392b; -fx-text-fill: white; -fx-font-weight: bold;"/>
+
+</HBox>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.control.Button?>
+
+<!--
+    NumpadComponent — reusable 3×4 numeric keypad.
+    Parent controller calls NumpadController.configure() after fx:include loads this.
+-->
+<GridPane hgap="10" vgap="10" alignment="CENTER"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.grocerypos.controller.component.NumpadController">
+
+    <Button text="1" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+    <Button text="2" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+    <Button text="3" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="2" GridPane.rowIndex="0"/>
+    <Button text="4" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+    <Button text="5" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+    <Button text="6" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
+    <Button text="7" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+    <Button text="8" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+    <Button text="9" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="2" GridPane.rowIndex="2"/>
+
+    <!-- Bottom row: CLR | 0 | action button — labels/colours set by parent via configure() -->
+    <Button fx:id="btnClear"  onAction="#handleClear"  prefWidth="70" prefHeight="50" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+    <Button text="0"          onAction="#handleNum"    prefWidth="70" prefHeight="50" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+    <Button fx:id="btnAction" onAction="#handleAction" prefWidth="70" prefHeight="50" GridPane.columnIndex="2" GridPane.rowIndex="3"/>
+
+</GridPane>

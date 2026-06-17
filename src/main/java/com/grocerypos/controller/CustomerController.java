@@ -19,10 +19,6 @@ public class CustomerController {
         this.cartService = service;
     }
 
-    // BUG FIX 2: The original only called syncDisplayView() when going *inactive*,
-    // which meant the customer screen never populated when the transaction started.
-    // Now syncDisplayView() is called on both transitions so the display is always
-    // up-to-date regardless of which direction the state switches.
     public void setCustomerStateActive(boolean active) {
         customerIdlePane.setVisible(!active);
         customerActivePane.setVisible(active);

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
+
+<!--
+    ProductRowComponent — a single catalog row in the debug console.
+    Parent calls ProductRowController.configure(product, onScan) to populate data.
+-->
+<HBox alignment="CENTER_LEFT" spacing="0"
+    style="-fx-background-color: #111111; -fx-padding: 8 10; -fx-background-radius: 3;"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.grocerypos.controller.component.ProductRowController">
+
+    <VBox HBox.hgrow="ALWAYS" spacing="2">
+        <Label fx:id="lblBarcodeName" text=""
+            style="-fx-text-fill: #cccccc; -fx-font-size: 12px; -fx-font-family: 'Courier New';"/>
+        <Label fx:id="lblPrice" text=""
+            style="-fx-text-fill: #555555; -fx-font-size: 10px; -fx-font-family: 'Courier New';"/>
+    </VBox>
+
+    <Button fx:id="btnScan" text="SCAN" onAction="#handleScan"
+        style="-fx-background-color: #003300; -fx-text-fill: #00ff41; -fx-font-family: 'Courier New';
+               -fx-font-size: 11px; -fx-font-weight: bold; -fx-border-color: #00aa2e; -fx-border-width: 1;
+               -fx-background-radius: 2; -fx-border-radius: 2; -fx-padding: 6 14; -fx-cursor: hand;"/>
+
+</HBox>

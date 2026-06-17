@@ -38,14 +38,6 @@ public class CartService {
         //     a physical scanner works: each trigger pull is a discrete scan event
         //     and produces its own receipt line at qty 1.
         if (currentMultiplier > 1) {
-            // Quantity-scan path: accumulate into the existing row if present.
-//            for (CartItem item : activeCart) {
-//                if (item.getName().equals(p.getName())) {
-//                    item.setQuantity(item.getQuantity() + currentMultiplier);
-//                    currentMultiplier = 1;
-//                    return true;
-//                }
-//            }
             // Product not yet in cart — add a new row with the explicit quantity.
             activeCart.add(new CartItem(p, currentMultiplier));
         } else {
