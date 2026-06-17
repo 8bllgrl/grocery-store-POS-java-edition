@@ -6,6 +6,7 @@ import com.grocerypos.controller.EmployeeController;
 import com.grocerypos.service.CartService;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Screen;
@@ -17,7 +18,32 @@ public class StageManager {
 
     private final CartService cartService = new CartService();
 
+    // Promoted fields to allow programmatic background testing
+    private Stage employeeStage;
+    private EmployeeController employeeController;
+    private CustomerController customerController;
+
+    public CartService getCartService() {
+        return this.cartService;
+    }
+
+    // Getter methods required by your CustomerDisplayTransparencyTest
+    public Stage getEmployeeStage() {
+        return this.employeeStage;
+    }
+
+    public EmployeeController getEmployeeController() {
+        return this.employeeController;
+    }
+
+    public CustomerController getCustomerController() {
+        return this.customerController;
+    }
+
     public void launchDisplays(Stage primaryStage) {
+        // Save the reference to the primary employee stage
+        this.employeeStage = primaryStage;
+
         ObservableList<Screen> screens = Screen.getScreens();
         Screen primaryScreen = Screen.getPrimary();
 
@@ -26,8 +52,10 @@ public class StageManager {
             FXMLLoader empLoader = new FXMLLoader(
                     getClass().getResource("/com/grocerypos/view/employee_view.fxml"));
             Parent empRoot = empLoader.load();
-            EmployeeController empController = empLoader.getController();
-            empController.initializeService(cartService);
+
+            // Store reference in the class instance field
+            this.employeeController = empLoader.getController();
+            this.employeeController.initializeService(cartService);
 
             primaryStage.setTitle("GroceryPOS Terminal - Employee Console");
             primaryStage.setScene(new Scene(empRoot));
@@ -41,8 +69,10 @@ public class StageManager {
             FXMLLoader custLoader = new FXMLLoader(
                     getClass().getResource("/com/grocerypos/view/customer_view.fxml"));
             Parent custRoot = custLoader.load();
-            CustomerController custController = custLoader.getController();
-            custController.initializeService(cartService);
+
+            // Store reference in the class instance field
+            this.customerController = custLoader.getController();
+            this.customerController.initializeService(cartService);
 
             customerStage.setTitle("GroceryPOS Terminal - Customer Facing Panel");
             customerStage.setScene(new Scene(custRoot));
@@ -67,8 +97,8 @@ public class StageManager {
             primaryStage.setOnCloseRequest(event -> customerStage.close());
             customerStage.show();
 
-            // Wire controllers together
-            empController.setCustomerController(custController);
+            // Wire controllers together using instance variables
+            this.employeeController.setCustomerController(this.customerController);
 
             // ── Debug window (only when launched with --debug) ───────────────
             if (Main.debugMode) {
@@ -76,7 +106,7 @@ public class StageManager {
                         getClass().getResource("/com/grocerypos/view/debug_view.fxml"));
                 Parent dbgRoot = dbgLoader.load();
                 DebugController dbgController = dbgLoader.getController();
-                dbgController.initializeService(cartService, empController);
+                dbgController.initializeService(cartService, this.employeeController);
 
                 Stage debugStage = new Stage();
                 debugStage.setTitle("GroceryPOS — Debug Console");

@@ -1,5 +1,7 @@
 package com.grocerypos.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
 
 public class Product {
@@ -7,7 +9,12 @@ public class Product {
     private final String name;
     private final BigDecimal unitPrice;
 
-    public Product(String barcode, String name, BigDecimal unitPrice) {
+    // Direct binding annotations keep your class safe and immutable
+    @JsonCreator
+    public Product(
+            @JsonProperty("barcode") String barcode,
+            @JsonProperty("name") String name,
+            @JsonProperty("unitPrice") BigDecimal unitPrice) {
         this.barcode = barcode;
         this.name = name;
         this.unitPrice = unitPrice;

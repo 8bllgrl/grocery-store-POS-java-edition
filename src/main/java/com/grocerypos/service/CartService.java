@@ -5,7 +5,15 @@ import com.grocerypos.model.Product;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class CartService {
@@ -13,12 +21,39 @@ public class CartService {
     private final Map<String, Product> mockDatabase = new HashMap<>();
     private int currentMultiplier = 1;
 
-    public CartService() {
-        mockDatabase.put("111", new Product("111", "WW Muesli Bars 6pk",   new BigDecimal("4.50")));
-        mockDatabase.put("222", new Product("222", "Full Cream Milk 2L",    new BigDecimal("3.10")));
-        mockDatabase.put("333", new Product("333", "Thick Cut Chips 175g",  new BigDecimal("4.80")));
-        mockDatabase.put("444", new Product("444", "Cadbury Dairy Milk",    new BigDecimal("5.50")));
-    }
+//    public CartService() {
+//        loadCatalogFromJson();
+//    }
+
+//    private void loadCatalogFromJson() {
+//        ObjectMapper mapper = new ObjectMapper();
+//
+//        // Dynamically extract data stream from application resources
+//        try (InputStream is = getClass().getResourceAsStream("/com/grocerypos/data/products.json")) {
+//            if (is == null) {
+//                System.err.println("Critical Error: products.json resource file not found!");
+//                return;
+//            }
+//
+//            // Deserializing JSON list directly into a List of Product instances
+//            List<Product> products = mapper.readValue(is, new TypeReference<List<Product>>() {});
+//
+//            // Re-populate the live operational map [cite: 136]
+//            for (Product p : products) {
+//                mockDatabase.put(p.getBarcode(), p);
+//            }
+//
+//            System.out.println("[SYSTEM] Successfully parsed " + mockDatabase.size() + " items from JSON via Jackson.");
+//
+//        } catch (Exception e) {
+//            System.err.println("Critical Failure mapping local JSON matrix payload.");
+//            e.printStackTrace();
+//        }
+//    }
+//
+//    public Collection<Product> getAllProducts() {
+//        return mockDatabase.values();
+//    }
 
     public ObservableList<CartItem> getActiveCart() { return activeCart; }
 
