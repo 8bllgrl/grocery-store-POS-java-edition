@@ -1,13 +1,11 @@
 package com.grocerypos.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grocerypos.model.CartItem;
 import com.grocerypos.model.Product;
+import com.grocerypos.repository.ProductRepository;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.HashMap;
@@ -20,40 +18,23 @@ public class CartService {
     private int currentMultiplier = 1;
 
     public CartService() {
-        loadCatalogFromJson();
+        loadCatalogFromDatabase();
     }
 
-    private void loadCatalogFromJson() {
-        ObjectMapper mapper = new ObjectMapper();
+    private void loadCatalogFromDatabase() {
+        ProductRepository repository = new ProductRepository();
+        List<Product> products = repository.findAll();
 
-        // Dynamically extract data stream from application resources
-        try (InputStream is = getClass().getResourceAsStream("/com/grocerypos/data/products.json")) {
-            if (is == null) {
-                System.err.println("Critical Error: products.json resource file not found!");
-                return;
-            }
-
-            // Deserializing JSON list directly into a List of Product instances.
-            // NOTE: this requires `opens com.grocerypos.model to com.fasterxml.jackson.databind;`
-            // in module-info.java so Jackson can reflectively invoke the @JsonCreator
-            // constructor. `exports` alone is not enough.
-            List<Product> products = mapper.readValue(is, new TypeReference<List<Product>>() {});
-
-            // Re-populate the live operational map
-            for (Product p : products) {
-                mockDatabase.put(p.getBarcode(), p);
-            }
-
-            System.out.println("[SYSTEM] Successfully parsed " + mockDatabase.size() + " items from JSON via Jackson.");
-
-        } catch (Exception e) {
-            // Surface the real cause loudly — an empty catalog otherwise fails
-            // silently and every barcode scan looks like a "wrong barcode" bug
-            // instead of "the catalog never loaded" bug.
-            System.err.println("Critical Failure mapping local JSON matrix payload: "
-                    + e.getClass().getSimpleName() + " - " + e.getMessage());
-            e.printStackTrace();
+        if (products.isEmpty()) {
+            System.err.println("Critical Error: no products loaded from database!");
+            return;
         }
+
+        for (Product p : products) {
+            mockDatabase.put(p.getBarcode(), p);
+        }
+
+        System.out.println("[SYSTEM] Successfully loaded " + mockDatabase.size() + " items from PostgreSQL.");
     }
 
     public Collection<Product> getAllProducts() {

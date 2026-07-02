@@ -16,10 +16,13 @@ module com.grocerypos {
 
     // Allows JavaFX to launch the application classes
     exports com.grocerypos.app;
+    exports com.grocerypos.model;
 
     // Open your UI packages to JavaFX and AspectJ's runtime agents
     opens com.grocerypos.controller to javafx.fxml;
+    opens com.grocerypos.controller.component to javafx.fxml;
     opens com.grocerypos.app to javafx.fxml;
+    opens com.grocerypos.model to com.fasterxml.jackson.databind;
 }
 == D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\java\com\grocerypos\app\Launcher.java ==
 package com.grocerypos.app;
@@ -223,47 +226,70 @@ public class LoggingAspect {
 
     private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
-    // 1. Target all execution methods inside your root application package
-    // Excludes any potential timeline/clock/tick classes if you have them explicitly named
     @Pointcut("execution(* com.grocerypos..*.*(..)) " +
             "&& !execution(* com.grocerypos..*Clock*.*(..)) " +
-            "&& !execution(* com.grocerypos..*Tick*.*(..))")
+            "&& !execution(* com.grocerypos..*Tick*.*(..)) " +
+            "&& !execution(* com.grocerypos..*.*Property(..)) " +
+            "&& !execution(* com.grocerypos..*.get*(..)) " +
+            "&& !execution(* com.grocerypos..*.set*(..)) " +
+            "&& !within(com.grocerypos..TopBarController) " +
+            // 3. Silence UI rendering internals, cell factories, and update hooks
+            "&& !execution(* com.grocerypos..*.updateItem(..)) " +
+            "&& !execution(* com.grocerypos..*.*lambda$buildCartItemCellFactory*(..))")
     public void applicationMethods() {}
 
-    // 2. Automate Entry, Exit, and Return Value collection using an @Around advice
+    // 2. Clean, single-line @Around advice
     @Around("applicationMethods()")
     public Object logMethodLifecycle(ProceedingJoinPoint joinPoint) throws Throwable {
-        String timestamp = LocalDateTime.now().format(TIMESTAMP_FORMAT);
+        long startTime = System.currentTimeMillis();
+
         String className = joinPoint.getSignature().getDeclaringType().getSimpleName();
         String methodName = joinPoint.getSignature().getName();
 
-        // Match your format preference: [CLASS.methodName]
-        String logHeader = String.format("[%s][%s.%s]", timestamp, className, methodName);
-
-        // --- ENTRY LOG ---
-        System.out.println(logHeader + " ENTRY");
-
         Object result;
         try {
-            // Let the actual business logic method execute
             result = joinPoint.proceed();
         } catch (Throwable throwable) {
-            // Optional: Logs exceptions if a method breaks out early
-            System.out.println(logHeader + " THREW EXCEPTION: " + throwable.getClass().getSimpleName());
+            String timestamp = LocalDateTime.now().format(TIMESTAMP_FORMAT);
+            System.out.printf("[%s] -- [%s.%s] EXCEPTION: %s%n",
+                    timestamp, className, methodName, throwable.getClass().getSimpleName());
             throw throwable;
         }
 
-        // --- EXIT & RETURN LOG ---
+        long duration = System.currentTimeMillis() - startTime;
+        String timestamp = LocalDateTime.now().format(TIMESTAMP_FORMAT);
+
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Class<?> returnType = signature.getReturnType();
 
         if (returnType == void.class) {
-            System.out.println(logHeader + " EXIT (void)");
+            System.out.printf("[%s] -- [%s.%s] Took %dms | void%n",
+                    timestamp, className, methodName, duration);
         } else {
-            System.out.println(logHeader + " EXIT | Return Value: " + result);
+            System.out.printf("[%s] -- [%s.%s] Took %dms | Return: %s%n",
+                    timestamp, className, methodName, duration, result);
         }
 
         return result;
+    }
+}
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\java\com\grocerypos\connectors\DbConnection.java ==
+package com.grocerypos.connectors;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class DBConnection {
+
+    private static final String URL =
+            "jdbc:postgresql://localhost:5433/grocery_store_db";
+
+    private static final String USER = "postgres";
+    private static final String PASSWORD = "your_password";
+
+    public static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(URL, USER, PASSWORD);
     }
 }
 == D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\java\com\grocerypos\controller\CustomerController.java ==
