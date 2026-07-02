@@ -1,0 +1,1384 @@
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Install the latest PowerShell for new features and improvements! https://aka.ms/PSWindows
+
+PS D:\Start_Here\User_Files\Code\java\grocery-pos-system> Get-ChildItem -Recurse -Filter *.java | ForEach-Object {
+>>     Write-Output "== $($_.FullName) =="
+>>     Get-Content $_.FullName
+>> }
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\java\module-info.java ==
+module com.grocerypos {
+    requires javafx.controls;
+    requires javafx.fxml;
+    requires com.fasterxml.jackson.databind;
+    requires org.aspectj.runtime; // Keep the standard runtime library, NOT the weaver!
+
+    // Allows JavaFX to launch the application classes
+    exports com.grocerypos.app;
+
+    // Open your UI packages to JavaFX and AspectJ's runtime agents
+    opens com.grocerypos.controller to javafx.fxml;
+    opens com.grocerypos.app to javafx.fxml;
+}
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\java\com\grocerypos\app\Launcher.java ==
+package com.grocerypos.app;
+
+public class Launcher {
+    public static void main(String[] args) {
+        // This bypasses the JavaFX runtime component verification check entirely
+        Main.main(args);
+    }
+}
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\java\com\grocerypos\app\Main.java ==
+package com.grocerypos.app;
+
+import javafx.application.Application;
+import javafx.stage.Stage;
+
+public class Main extends Application {
+    /** Set to true when the app is launched with the --debug argument. */
+    static boolean debugMode = false;
+    private StageManager stageManager;
+
+    @Override
+    public void init() {
+        debugMode = getParameters().getRaw().contains("--debug");
+        if (debugMode) System.out.println("[DEBUG] Debug mode enabled.");
+        stageManager = new StageManager();
+    }
+
+    @Override
+    public void start(Stage primaryStage) {
+        stageManager.launchDisplays(primaryStage);
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+}
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\java\com\grocerypos\app\StageManager.java ==
+package com.grocerypos.app;
+
+import com.grocerypos.controller.CustomerController;
+import com.grocerypos.controller.DebugController;
+import com.grocerypos.controller.EmployeeController;
+import com.grocerypos.service.CartService;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.input.MouseEvent;
+import javafx.stage.Screen;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import java.io.IOException;
+
+public class StageManager {
+
+    private final CartService cartService = new CartService();
+
+    // Promoted fields to allow programmatic background testing
+    private Stage employeeStage;
+    private EmployeeController employeeController;
+    private CustomerController customerController;
+
+    public CartService getCartService() {
+        return this.cartService;
+    }
+
+    // Getter methods required by your CustomerDisplayTransparencyTest
+    public Stage getEmployeeStage() {
+        return this.employeeStage;
+    }
+
+    public EmployeeController getEmployeeController() {
+        return this.employeeController;
+    }
+
+    public CustomerController getCustomerController() {
+        return this.customerController;
+    }
+
+    public void setupGlobalLogging(Scene scene) {
+        scene.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
+            // Check if the target of the event is a Button
+            if (event.getTarget() instanceof javafx.scene.control.Button button) {
+                System.out.println("[LOG] Button Pressed: " + button.getText());
+            }
+        });
+    }
+
+    public void launchDisplays(Stage primaryStage) {
+        // Save the reference to the primary employee stage
+        this.employeeStage = primaryStage;
+
+        ObservableList<Screen> screens = Screen.getScreens();
+        Screen primaryScreen = Screen.getPrimary();
+
+        try {
+            // â”€â”€ Employee window â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            FXMLLoader empLoader = new FXMLLoader(
+                    getClass().getResource("/com/grocerypos/view/employee_view.fxml"));
+            Parent empRoot = empLoader.load();
+
+            // Store reference in the class instance field
+            this.employeeController = empLoader.getController();
+            this.employeeController.initializeService(cartService);
+
+            primaryStage.setTitle("GroceryPOS Terminal - Employee Console");
+            primaryStage.setScene(new Scene(empRoot));
+            primaryStage.setX(primaryScreen.getVisualBounds().getMinX());
+            primaryStage.setY(primaryScreen.getVisualBounds().getMinY());
+            primaryStage.setMaximized(true);
+            primaryStage.show();
+
+            // â”€â”€ Customer window â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            Stage customerStage = new Stage();
+            FXMLLoader custLoader = new FXMLLoader(
+                    getClass().getResource("/com/grocerypos/view/customer_view.fxml"));
+            Parent custRoot = custLoader.load();
+
+            // Store reference in the class instance field
+            this.customerController = custLoader.getController();
+            this.customerController.initializeService(cartService);
+
+            customerStage.setTitle("GroceryPOS Terminal - Customer Facing Panel");
+            customerStage.setScene(new Scene(custRoot));
+
+            if (screens.size() > 1) {
+                Screen secondary = screens.stream()
+                        .filter(s -> !s.equals(primaryScreen))
+                        .findFirst()
+                        .orElse(primaryScreen);
+                customerStage.setX(secondary.getVisualBounds().getMinX());
+                customerStage.setY(secondary.getVisualBounds().getMinY());
+                customerStage.setMaximized(true);
+            } else {
+                System.out.println("Single display: launching customer panel as floating window.");
+                customerStage.setWidth(480);
+                customerStage.setHeight(640);
+                customerStage.setX(10);
+                customerStage.setY(50);
+                customerStage.setAlwaysOnTop(true);
+            }
+
+            primaryStage.setOnCloseRequest(event -> customerStage.close());
+            customerStage.show();
+
+            // Wire controllers together using instance variables
+            this.employeeController.setCustomerController(this.customerController);
+
+            // â”€â”€ Debug window (only when launched with --debug) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            if (Main.debugMode) {
+                FXMLLoader dbgLoader = new FXMLLoader(
+                        getClass().getResource("/com/grocerypos/view/debug_view.fxml"));
+                Parent dbgRoot = dbgLoader.load();
+                DebugController dbgController = dbgLoader.getController();
+                dbgController.initializeService(cartService, this.employeeController);
+
+                Stage debugStage = new Stage();
+                debugStage.setTitle("GroceryPOS â€” Debug Console");
+                debugStage.setScene(new Scene(dbgRoot));
+                debugStage.setWidth(420);
+                debugStage.setHeight(580);
+
+                // Position it to the right of the employee window on single-monitor setups
+                debugStage.setX(primaryScreen.getVisualBounds().getMaxX() - 440);
+                debugStage.setY(primaryScreen.getVisualBounds().getMinY() + 40);
+                debugStage.setAlwaysOnTop(true);
+                debugStage.setResizable(false);
+
+                // Close debug window when the main window closes
+                primaryStage.setOnCloseRequest(event -> {
+                    customerStage.close();
+                    debugStage.close();
+                });
+
+                debugStage.show();
+                System.out.println("[DEBUG] Debug console active.");
+            }
+
+        } catch (IOException e) {
+            System.err.println("Critical Error loading layout profiles.");
+            e.printStackTrace();
+        }
+    }
+}
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\java\com\grocerypos\aspect\LoggingAspect.java ==
+package com.grocerypos.aspect;
+
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.reflect.MethodSignature;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+@Aspect
+public class LoggingAspect {
+
+    private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+
+    // 1. Target all execution methods inside your root application package
+    // Excludes any potential timeline/clock/tick classes if you have them explicitly named
+    @Pointcut("execution(* com.grocerypos..*.*(..)) " +
+            "&& !execution(* com.grocerypos..*Clock*.*(..)) " +
+            "&& !execution(* com.grocerypos..*Tick*.*(..))")
+    public void applicationMethods() {}
+
+    // 2. Automate Entry, Exit, and Return Value collection using an @Around advice
+    @Around("applicationMethods()")
+    public Object logMethodLifecycle(ProceedingJoinPoint joinPoint) throws Throwable {
+        String timestamp = LocalDateTime.now().format(TIMESTAMP_FORMAT);
+        String className = joinPoint.getSignature().getDeclaringType().getSimpleName();
+        String methodName = joinPoint.getSignature().getName();
+
+        // Match your format preference: [CLASS.methodName]
+        String logHeader = String.format("[%s][%s.%s]", timestamp, className, methodName);
+
+        // --- ENTRY LOG ---
+        System.out.println(logHeader + " ENTRY");
+
+        Object result;
+        try {
+            // Let the actual business logic method execute
+            result = joinPoint.proceed();
+        } catch (Throwable throwable) {
+            // Optional: Logs exceptions if a method breaks out early
+            System.out.println(logHeader + " THREW EXCEPTION: " + throwable.getClass().getSimpleName());
+            throw throwable;
+        }
+
+        // --- EXIT & RETURN LOG ---
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        Class<?> returnType = signature.getReturnType();
+
+        if (returnType == void.class) {
+            System.out.println(logHeader + " EXIT (void)");
+        } else {
+            System.out.println(logHeader + " EXIT | Return Value: " + result);
+        }
+
+        return result;
+    }
+}
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\java\com\grocerypos\controller\CustomerController.java ==
+package com.grocerypos.controller;
+
+import com.grocerypos.model.CartItem;
+import com.grocerypos.service.CartService;
+import javafx.fxml.FXML;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.layout.VBox;
+import javafx.util.Callback;
+
+import java.math.BigDecimal;
+
+public class CustomerController {
+
+    @FXML private VBox customerIdlePane;
+    @FXML private VBox customerActivePane;
+    @FXML private ListView<CartItem> listItemsView;
+    @FXML private Label lblCustomerGrandTotal; // Must match fx:id
+    private CartService cartService;
+
+    public void initializeService(CartService service) {
+        this.cartService = service;
+        listItemsView.setItems(cartService.getActiveCart());
+
+        // FIX: ListView renders each item via toString() by default, and
+        // CartItem never overrides it â€” hence "com.grocerypos.model.CartItem@33c9967"
+        // showing up instead of the product name/qty/price. A cellFactory
+        // tells the ListView exactly how to render a CartItem.
+        listItemsView.setCellFactory(buildCartItemCellFactory());
+
+        syncDisplayView();
+    }
+
+    private Callback<ListView<CartItem>, ListCell<CartItem>> buildCartItemCellFactory() {
+        return lv -> new ListCell<>() {
+            @Override
+            protected void updateItem(CartItem item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(String.format("%-28s x%-3d $%s",
+                            item.getName(), item.getQuantity(), item.getLineTotal()));
+                }
+            }
+        };
+    }
+
+    /**
+     * Drives all updates from the shared CartService to the customer display interface.
+     * Toggles layout profiles based on whether the active cart has rows or is empty.
+     */
+    public void syncDisplayView() {
+        if (cartService == null || cartService.getActiveCart().isEmpty()) {
+            customerActivePane.setVisible(false);
+            customerIdlePane.setVisible(true);
+        } else {
+            customerIdlePane.setVisible(false);
+            customerActivePane.setVisible(true);
+
+            // Re-render and print literal metric summaries
+            BigDecimal total = cartService.getGrandTotal();
+            lblCustomerGrandTotal.setText("$" + total.toString());
+        }
+    }
+
+    /**
+     * Programmatic backup handle to explicitly override state triggers.
+     */
+    public void setCustomerStateActive(boolean active) {
+        if (active) {
+            customerIdlePane.setVisible(false);
+            customerActivePane.setVisible(true);
+        } else {
+            customerActivePane.setVisible(false);
+            customerIdlePane.setVisible(true);
+        }
+    }
+}
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\java\com\grocerypos\controller\DebugController.java ==
+package com.grocerypos.controller;
+
+import com.grocerypos.controller.component.ProductRowController;
+import com.grocerypos.model.Product;
+import com.grocerypos.service.CartService;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+public class DebugController {
+
+    @FXML private Label lblDebugStatus;
+    @FXML private VBox  catalogContainer;   // fx:id on the VBox that holds product rows
+
+    private CartService cartService;
+    private EmployeeController employeeController;
+
+    public void initializeService(CartService service, EmployeeController empController) {
+        this.cartService        = service;
+        this.employeeController = empController;
+        buildCatalogRows();
+    }
+
+    /**
+     * Dynamically builds one ProductRow component per product.
+     *
+     * FIX: this now reads the catalog from CartService.getAllProducts() â€” the
+     * same source of truth that powers real scans â€” instead of a hardcoded
+     * local list. The old hardcoded List.of(...) was a second, independent
+     * copy of the catalog that could silently drift out of sync with
+     * products.json (different barcodes/names/prices), which is exactly what
+     * caused the debug buttons to send barcodes the live CartService catalog
+     * no longer recognised.
+     */
+    private void buildCatalogRows() {
+        catalogContainer.getChildren().clear();
+
+        List<Product> catalog = new ArrayList<>(cartService.getAllProducts());
+        catalog.sort(Comparator.comparing(Product::getBarcode));
+
+        if (catalog.isEmpty()) {
+            lblDebugStatus.setText("> WARNING: catalog is empty â€” check products.json / module-info.java");
+            return;
+        }
+
+        for (Product product : catalog) {
+            try {
+                FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/com/grocerypos/view/components/product_row.fxml"));
+                Node row = loader.load();
+                ProductRowController ctrl = loader.getController();
+                ctrl.configure(product, this::fireScan);
+                catalogContainer.getChildren().add(row);
+            } catch (IOException e) {
+                System.err.println("Failed to load product_row.fxml for: " + product.getName());
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void fireScan(String barcode) {
+        employeeController.triggerDebugScan(barcode);
+        lblDebugStatus.setText("> scanned: [" + barcode + "]");
+    }
+}
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\java\com\grocerypos\controller\EmployeeController.java ==
+package com.grocerypos.controller;
+
+import com.grocerypos.model.Employee;
+import com.grocerypos.service.EmployeeService;
+import com.grocerypos.controller.component.NumpadController;
+import com.grocerypos.controller.component.StatusBarController;
+import com.grocerypos.controller.component.TopBarController;
+import com.grocerypos.model.CartItem;
+import com.grocerypos.service.CartService;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.fxml.FXML;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.util.Duration;
+import java.math.BigDecimal;
+
+public class EmployeeController {
+
+    // â”€â”€ Component sub-controllers (injected by JavaFX from fx:include) â”€â”€â”€â”€â”€â”€â”€
+    // Naming convention: fx:id="posNumpad" â†’ field name "posNumpad" + "posNumpadController"
+
+    @FXML private HBox topBar;
+    @FXML private TopBarController topBarController;
+
+    @FXML private HBox statusBar;
+    @FXML private StatusBarController statusBarController;
+
+    @FXML private GridPane posNumpad;
+    @FXML private NumpadController posNumpadController;
+
+    @FXML private GridPane credNumpad;
+    @FXML private NumpadController credNumpadController;
+
+    // â”€â”€ Own FXML fields â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+    @FXML private Label lblMultiplierScale;
+    @FXML private Label lblTotalBalance;
+
+    @FXML private javafx.scene.layout.Pane paneAd;
+    @FXML private javafx.scene.layout.Pane paneLogin;
+    @FXML private javafx.scene.layout.Pane paneCredentials;
+    @FXML private javafx.scene.layout.Pane paneLoading;
+    @FXML private javafx.scene.layout.Pane paneMainPOS;
+
+    @FXML private TextField txtUsername;
+    @FXML private TextField txtScannerBuffer;
+    @FXML private PasswordField txtPassword;
+
+    @FXML private TableView<CartItem> tableCart;
+    @FXML private TableColumn<CartItem, String>     colName;
+    @FXML private TableColumn<CartItem, Integer>    colQty;
+    @FXML private TableColumn<CartItem, BigDecimal> colUnitPrice;
+    @FXML private TableColumn<CartItem, BigDecimal> colLineTotal;
+
+    private enum CredFocus { USERNAME, PASSWORD }
+    private CredFocus credFocus = CredFocus.USERNAME;
+
+    private CartService cartService;
+    private final EmployeeService employeeService = new EmployeeService();
+    private Employee currentEmployee;
+    private CustomerController customerController;
+    private final StringBuilder inputAccumulator = new StringBuilder();
+
+
+    // â”€â”€ Lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+    @FXML
+    public void initialize() {
+        configureTableMapping();
+        wireComponents();
+
+        txtUsername.setOnMouseClicked(e -> credFocus = CredFocus.USERNAME);
+        txtPassword.setOnMouseClicked(e -> credFocus = CredFocus.PASSWORD);
+    }
+
+    public void initializeService(CartService service) {
+        this.cartService = service;
+        tableCart.setItems(cartService.getActiveCart());
+    }
+
+    public void setCustomerController(CustomerController target) {
+        this.customerController = target;
+    }
+
+    // â”€â”€ Component wiring (equivalent to passing props) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+    private void wireComponents() {
+
+        // TopBar â€” no callbacks needed, it manages its own clock
+        // topBarController is ready to use immediately
+
+        // StatusBar callbacks
+        statusBarController.configure(
+            () -> System.out.println("Invoking Peripheral Sequence Trigger: Open Drawer"),
+            () -> System.out.println("Invoking Peripheral Sequence Trigger: Print Docket"),
+            () -> System.out.println("Invoking Peripheral Sequence Trigger: User Barcode"),
+            this::handleLogoutSequence
+        );
+
+        // POS numpad â€” quantity multiplier entry
+        posNumpadController.configure(
+            digit -> {
+                inputAccumulator.append(digit);
+                lblMultiplierScale.setText(inputAccumulator.toString());
+            },
+            this::handlePOSClear,
+            this::handlePOSQtyApply,
+            "QTY", "#e67e22",
+            "CLR", "#95a5a6"
+        );
+
+        // Credential numpad â€” login PIN entry
+        credNumpadController.configure(
+            digit -> {
+                if (credFocus == CredFocus.USERNAME) txtUsername.appendText(digit);
+                else                                 txtPassword.appendText(digit);
+            },
+            this::handleCredClear,
+            this::handleCredSubmit,
+            "ENT", "#2ecc71",
+            "CLR", "#e74c3c"
+        );
+    }
+
+    // â”€â”€ Table setup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+    private void configureTableMapping() {
+        colName.setCellValueFactory(new PropertyValueFactory<>("name"));
+        colQty.setCellValueFactory(new PropertyValueFactory<>("quantity"));
+        colUnitPrice.setCellValueFactory(new PropertyValueFactory<>("unitPrice"));
+        colLineTotal.setCellValueFactory(new PropertyValueFactory<>("lineTotal"));
+    }
+
+    // â”€â”€ State transitions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+    @FXML void handleAdClick(MouseEvent event) {
+        paneAd.setVisible(false);
+        paneLogin.setVisible(true);
+    }
+
+    @FXML void handleLoginClick() {
+        paneLogin.setVisible(false);
+        paneCredentials.setVisible(true);
+        credFocus = CredFocus.USERNAME;
+    }
+
+    private void handleCredClear() {
+        txtUsername.clear();
+        txtPassword.clear();
+        credFocus = CredFocus.USERNAME;
+    }
+
+    private void handleCredSubmit() {
+        String uid = txtUsername.getText();
+        String pwd = txtPassword.getText();
+
+        Employee result = employeeService.login(uid, pwd);
+
+        if (result == null) {
+            new Alert(Alert.AlertType.WARNING, "Login failed. Check PIN and password.").showAndWait();
+            handleCredClear();
+            return;
+        }
+
+        currentEmployee = result;
+        topBarController.setOperatorName(currentEmployee.getFullName());
+
+        paneCredentials.setVisible(false);
+        paneLoading.setVisible(true);
+
+        new Timeline(new KeyFrame(Duration.seconds(1.2), e -> {
+            paneLoading.setVisible(false);
+            paneMainPOS.setVisible(true);
+            if (customerController != null) customerController.setCustomerStateActive(true);
+        })).play();
+    }
+
+    // â”€â”€ Main POS actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+    private void handlePOSClear() {
+        inputAccumulator.setLength(0);
+        lblMultiplierScale.setText("1");
+        if (cartService != null) cartService.setMultiplier(1);
+    }
+
+    private void handlePOSQtyApply() {
+        if (inputAccumulator.length() > 0) {
+            cartService.setMultiplier(Integer.parseInt(inputAccumulator.toString()));
+            inputAccumulator.setLength(0);
+        }
+    }
+
+    @FXML void handleManualScan() {
+        if (txtScannerBuffer.getText() != null) processScan(txtScannerBuffer.getText().trim());
+        txtScannerBuffer.clear();
+    }
+
+    /** Called by DebugController. Public so it can be reached from the separate debug window. */
+    public void triggerDebugScan(String barcode) {
+        processScan(barcode);
+    }
+
+    private void processScan(String barcode) {
+        boolean success = cartService.scanItemByBarcode(barcode);
+        if (success) {
+            tableCart.refresh();
+            lblTotalBalance.setText(String.format("$%.2f", cartService.getGrandTotal()));
+            lblMultiplierScale.setText("1");
+            if (customerController != null) customerController.syncDisplayView();
+        } else {
+            new Alert(Alert.AlertType.WARNING, "Barcode value not found in local JSON matrix.").showAndWait();
+        }
+    }
+
+    @FXML void handlePaymentAction(javafx.event.ActionEvent event) {
+        String total = lblTotalBalance != null ? lblTotalBalance.getText() : "$0.00";
+        new Alert(Alert.AlertType.INFORMATION,
+                "Processing transaction via: " + ((Button) event.getSource()).getText()
+                        + "\nTotal Settled: " + total).showAndWait();
+        cartService.clearCart();
+        if (lblTotalBalance != null) lblTotalBalance.setText("$0.00");
+        if (customerController != null) customerController.syncDisplayView();
+    }
+
+    private void handleLogoutSequence() {
+        employeeService.logout(currentEmployee);
+        currentEmployee = null;
+
+        paneMainPOS.setVisible(false);
+        paneAd.setVisible(true);
+        topBarController.setOperatorName("Not Authenticated");
+        handlePOSClear();
+        cartService.clearCart();
+        if (customerController != null) customerController.setCustomerStateActive(false);
+    }
+}
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\java\com\grocerypos\controller\component\NumpadController.java ==
+package com.grocerypos.controller.component;
+
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+
+import java.util.function.Consumer;
+
+/**
+ * Component controller for the shared numeric keypad.
+ *
+ * Usage â€” after fx:include loads this controller, call configure() from the
+ * parent controller's initialize() to inject callbacks and customise the two
+ * action buttons (the clear key and the right-hand confirm key).
+ *
+ * Equivalent to passing props to a React component.
+ */
+public class NumpadController {
+
+    @FXML private Button btnClear;
+    @FXML private Button btnAction;
+
+    private Consumer<String> onDigit;
+    private Runnable onClear;
+    private Runnable onAction;
+
+    /**
+     * "Props" â€” called by the parent controller after the include is wired.
+     *
+     * @param onDigit      callback receiving the digit string ("0"â€“"9")
+     * @param onClear      callback for the CLR button
+     * @param onAction     callback for the right confirm button (ENT / QTY / etc.)
+     * @param actionLabel  text shown on the confirm button
+     * @param actionColor  JavaFX CSS colour string for the confirm button background
+     * @param clearLabel   text shown on the clear button (default "CLR")
+     * @param clearColor   JavaFX CSS colour string for the clear button background
+     */
+    public void configure(
+            Consumer<String> onDigit,
+            Runnable onClear,
+            Runnable onAction,
+            String actionLabel, String actionColor,
+            String clearLabel,  String clearColor) {
+
+        this.onDigit  = onDigit;
+        this.onClear  = onClear;
+        this.onAction = onAction;
+
+        btnAction.setText(actionLabel);
+        btnAction.setStyle("-fx-background-color: " + actionColor + "; -fx-text-fill: white;");
+        btnClear.setText(clearLabel);
+        btnClear.setStyle("-fx-background-color: " + clearColor + "; -fx-text-fill: white;");
+    }
+
+    // â”€â”€ FXML handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+    @FXML
+    void handleNum(ActionEvent e) {
+        if (onDigit != null) onDigit.accept(((Button) e.getSource()).getText());
+    }
+
+    @FXML
+    void handleClear() {
+        if (onClear != null) onClear.run();
+    }
+
+    @FXML
+    void handleAction() {
+        if (onAction != null) onAction.run();
+    }
+}
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\java\com\grocerypos\controller\component\ProductRowController.java ==
+package com.grocerypos.controller.component;
+
+import com.grocerypos.model.Product;
+import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+
+import java.util.function.Consumer;
+
+/**
+ * Component controller for a single product row in the debug catalog.
+ *
+ * Used by DebugController: one FXMLLoader per product, then configure() is
+ * called to bind the product data and scan callback.
+ */
+public class ProductRowController {
+
+    @FXML private Label lblBarcodeName;
+    @FXML private Label lblPrice;
+    @FXML private Button btnScan;
+
+    // FIX: keep the barcode as data, not just text baked into a label.
+    // The previous version re-parsed it out of lblBarcodeName's displayed
+    // string ("[111]  Name" -> substring before "]"), which breaks the
+    // moment the label format ever changes (e.g. adding an icon prefix).
+    private String barcode;
+    private Consumer<String> onScan;
+
+    public void configure(Product product, Consumer<String> onScan) {
+        this.onScan = onScan;
+        this.barcode = product.getBarcode();
+        lblBarcodeName.setText("[" + product.getBarcode() + "]  " + product.getName());
+        lblPrice.setText("       /$" + product.getUnitPrice() + " / unit");
+    }
+
+    @FXML
+    void handleScan() {
+        if (onScan != null && barcode != null) onScan.accept(barcode);
+    }
+}
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\java\com\grocerypos\controller\component\StatusBarController.java ==
+package com.grocerypos.controller.component;
+
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+
+/**
+ * Component controller for the bottom status / dock bar.
+ *
+ * The parent injects callbacks for each button action via configure().
+ */
+public class StatusBarController {
+
+    private Runnable onOpenDrawer;
+    private Runnable onPrintDocket;
+    private Runnable onUserBarcode;
+    private Runnable onLogout;
+
+    public void configure(
+            Runnable onOpenDrawer,
+            Runnable onPrintDocket,
+            Runnable onUserBarcode,
+            Runnable onLogout) {
+        this.onOpenDrawer  = onOpenDrawer;
+        this.onPrintDocket = onPrintDocket;
+        this.onUserBarcode = onUserBarcode;
+        this.onLogout      = onLogout;
+    }
+
+    @FXML void handleOpenDrawer(ActionEvent e)  { if (onOpenDrawer  != null) onOpenDrawer.run(); }
+    @FXML void handlePrintDocket(ActionEvent e) { if (onPrintDocket != null) onPrintDocket.run(); }
+    @FXML void handleUserBarcode(ActionEvent e) { if (onUserBarcode != null) onUserBarcode.run(); }
+    @FXML void handleLogout(ActionEvent e)      { if (onLogout      != null) onLogout.run(); }
+}
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\java\com\grocerypos\controller\component\TopBarController.java ==
+package com.grocerypos.controller.component;
+
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.fxml.FXML;
+import javafx.scene.control.Label;
+import javafx.util.Duration;
+
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+
+/**
+ * Component controller for the top application bar.
+ *
+ * Owns the clock ticker. The parent controller calls setOperatorName() to
+ * update the operator label after login/logout.
+ */
+public class TopBarController {
+
+    @FXML private Label lblEmployee;
+    @FXML private Label lblClock;
+
+    @FXML
+    public void initialize() {
+        startClockRunner();
+    }
+
+    public void setOperatorName(String name) {
+        lblEmployee.setText("Operator: " + name);
+    }
+
+    private void startClockRunner() {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss");
+        Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+            if (lblClock != null) lblClock.setText(LocalTime.now().format(dtf));
+        }));
+        timeline.setCycleCount(Animation.INDEFINITE);
+        timeline.play();
+    }
+}
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\java\com\grocerypos\model\CartItem.java ==
+package com.grocerypos.model;
+
+import java.math.BigDecimal;
+import javafx.beans.property.*;
+
+public class CartItem {
+    private final StringProperty name;
+    private final IntegerProperty quantity;
+    private final ObjectProperty<BigDecimal> unitPrice;
+    private final ObjectProperty<BigDecimal> lineTotal;
+
+    public CartItem(Product product, int qty) {
+        this.name = new SimpleStringProperty(product.getName());
+        this.quantity = new SimpleIntegerProperty(qty);
+        this.unitPrice = new SimpleObjectProperty<>(product.getUnitPrice());
+        this.lineTotal = new SimpleObjectProperty<>(product.getUnitPrice().multiply(BigDecimal.valueOf(qty)));
+    }
+
+    public String getName() { return name.get(); }
+    public StringProperty nameProperty() { return name; }
+
+    public int getQuantity() { return quantity.get(); }
+    public IntegerProperty quantityProperty() { return quantity; }
+    public void setQuantity(int qty) {
+        this.quantity.set(qty);
+        this.lineTotal.set(getUnitPrice().multiply(BigDecimal.valueOf(qty)));
+    }
+
+    public BigDecimal getUnitPrice() { return unitPrice.get(); }
+    public ObjectProperty<BigDecimal> unitPriceProperty() { return unitPrice; }
+
+    public BigDecimal getLineTotal() { return lineTotal.get(); }
+    public ObjectProperty<BigDecimal> lineTotalProperty() { return lineTotal; }
+}
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\java\com\grocerypos\model\Employee.java ==
+package com.grocerypos.model;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+/**
+ * Represents a single employee login record.
+ *
+ * Loaded from employees.json via Jackson, same pattern as Product/products.json.
+ * Fields are intentionally simple for now (no permissions/tags yet Ã¢â‚¬â€ that's a
+ * later step). userId is the numeric PIN but kept as a String so leading
+ * zeros ("0007") are preserved instead of silently becoming 7.
+ *
+ * NOTE: password is stored PLAINTEXT for now. This is a placeholder Ã¢â‚¬â€
+ * encryption/hashing comes later once the basic login flow is working.
+ */
+public class Employee {
+    private String name;
+    private String firstName;
+    private double scanRate;
+    private String userId;
+    private String password;
+    private String status;
+    private boolean testUser;
+
+    // Jackson needs a no-arg constructor (or an @JsonCreator) to deserialize.
+    // Fields are mutable (no `final`, has setters) because, unlike Product,
+    // employee status/scanRate change at runtime (login/logout, future stats).
+    @JsonCreator
+    public Employee(
+            @JsonProperty("name") String name,
+            @JsonProperty("firstName") String firstName,
+            @JsonProperty("scanRate") double scanRate,
+            @JsonProperty("userId") String userId,
+            @JsonProperty("password") String password,
+            @JsonProperty("status") String status,
+            @JsonProperty("testUser") boolean testUser) {
+        this.name = name;
+        this.firstName = firstName;
+        this.scanRate = scanRate;
+        this.userId = userId;
+        this.password = password;
+        this.status = status;
+        this.testUser = testUser;
+    }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+
+    public double getScanRate() { return scanRate; }
+    public void setScanRate(double scanRate) { this.scanRate = scanRate; }
+
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public boolean isTestUser() { return testUser; }
+    public void setTestUser(boolean testUser) { this.testUser = testUser; }
+
+    /** Convenience for UI greetings: "Test" + "User" -> "Test User". */
+    public String getFullName() {
+        return firstName + " " + name;
+    }
+}
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\java\com\grocerypos\model\Product.java ==
+package com.grocerypos.model;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.math.BigDecimal;
+
+public class Product {
+    private final String barcode;
+    private final String name;
+    private final BigDecimal unitPrice;
+
+    // Direct binding annotations keep your class safe and immutable
+    @JsonCreator
+    public Product(
+            @JsonProperty("barcode") String barcode,
+            @JsonProperty("name") String name,
+            @JsonProperty("unitPrice") BigDecimal unitPrice) {
+        this.barcode = barcode;
+        this.name = name;
+        this.unitPrice = unitPrice;
+    }
+
+    public String getBarcode() { return barcode; }
+    public String getName() { return name; }
+    public BigDecimal getUnitPrice() { return unitPrice; }
+}
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\java\com\grocerypos\service\CartService.java ==
+package com.grocerypos.service;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.grocerypos.model.CartItem;
+import com.grocerypos.model.Product;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class CartService {
+    private final ObservableList<CartItem> activeCart = FXCollections.observableArrayList();
+    private final Map<String, Product> mockDatabase = new HashMap<>();
+    private int currentMultiplier = 1;
+
+    public CartService() {
+        loadCatalogFromJson();
+    }
+
+    private void loadCatalogFromJson() {
+        ObjectMapper mapper = new ObjectMapper();
+
+        // Dynamically extract data stream from application resources
+        try (InputStream is = getClass().getResourceAsStream("/com/grocerypos/data/products.json")) {
+            if (is == null) {
+                System.err.println("Critical Error: products.json resource file not found!");
+                return;
+            }
+
+            // Deserializing JSON list directly into a List of Product instances.
+            // NOTE: this requires `opens com.grocerypos.model to com.fasterxml.jackson.databind;`
+            // in module-info.java so Jackson can reflectively invoke the @JsonCreator
+            // constructor. `exports` alone is not enough.
+            List<Product> products = mapper.readValue(is, new TypeReference<List<Product>>() {});
+
+            // Re-populate the live operational map
+            for (Product p : products) {
+                mockDatabase.put(p.getBarcode(), p);
+            }
+
+            System.out.println("[SYSTEM] Successfully parsed " + mockDatabase.size() + " items from JSON via Jackson.");
+
+        } catch (Exception e) {
+            // Surface the real cause loudly â€” an empty catalog otherwise fails
+            // silently and every barcode scan looks like a "wrong barcode" bug
+            // instead of "the catalog never loaded" bug.
+            System.err.println("Critical Failure mapping local JSON matrix payload: "
+                    + e.getClass().getSimpleName() + " - " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public Collection<Product> getAllProducts() {
+        return mockDatabase.values();
+    }
+
+    public ObservableList<CartItem> getActiveCart() { return activeCart; }
+
+    public void setMultiplier(int value) { this.currentMultiplier = value; }
+    public int getCurrentMultiplier()    { return currentMultiplier; }
+
+    public boolean scanItemByBarcode(String barcode) {
+        Product p = mockDatabase.get(barcode);
+        if (p == null) return false;
+
+        // Real POS behaviour â€”
+        //   â€¢ If a multiplier > 1 was explicitly set (quantity scan), add a new
+        //     row with that explicit quantity, because the operator intentionally
+        //     keyed a quantity before scanning.
+        //   â€¢ If the multiplier is 1 (individual scan), always add a new row,
+        //     even when the same barcode was scanned before. This mirrors how
+        //     a physical scanner works: each trigger pull is a discrete scan event
+        //     and produces its own receipt line at qty 1.
+        if (currentMultiplier > 1) {
+            activeCart.add(new CartItem(p, currentMultiplier));
+        } else {
+            activeCart.add(new CartItem(p, 1));
+        }
+
+        currentMultiplier = 1;
+        return true;
+    }
+
+    public BigDecimal getGrandTotal() {
+        return activeCart.stream()
+                .map(CartItem::getLineTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public void clearCart() {
+        activeCart.clear();
+        currentMultiplier = 1;
+    }
+}
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\java\com\grocerypos\service\EmployeeService.java ==
+package com.grocerypos.service;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.grocerypos.model.Employee;
+
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Loads employee login records from employees.json and handles login lookups.
+ *
+ * Mirrors CartService's "read a JSON resource into an in-memory map" pattern.
+ * No permissions/tags system yet Ã¢â‚¬â€ that's a deliberate later step. For now
+ * this is purely: can we find a matching employee, and is their password right.
+ */
+public class EmployeeService {
+
+    // Keyed by userId (the PIN) for fast lookup during login.
+    private final Map<String, Employee> employeeDatabase = new HashMap<>();
+
+    public EmployeeService() {
+        loadEmployeesFromJson();
+    }
+
+    private void loadEmployeesFromJson() {
+        ObjectMapper mapper = new ObjectMapper();
+
+        try (InputStream is = getClass().getResourceAsStream("/com/grocerypos/data/employees.json")) {
+            if (is == null) {
+                System.err.println("Critical Error: employees.json resource file not found!");
+                return;
+            }
+
+            List<Employee> employees = mapper.readValue(is, new TypeReference<List<Employee>>() {});
+
+            for (Employee e : employees) {
+                employeeDatabase.put(e.getUserId(), e);
+            }
+
+            System.out.println("[SYSTEM] Successfully parsed " + employeeDatabase.size() + " employee records from JSON.");
+
+        } catch (Exception e) {
+            System.err.println("Critical Failure mapping employees.json payload: "
+                    + e.getClass().getSimpleName() + " - " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // TEST USER BYPASS SWITCH
+    //
+    // Set this to `false` to disable the blank-username/blank-password
+    // shortcut entirely. This is the ONE line to comment/toggle to turn
+    // the bypass off â€” everything else routes through isTestUserBypassEnabled().
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    private static final boolean TEST_USER_BYPASS_ENABLED = true;
+
+    public boolean isTestUserBypassEnabled() {
+        return TEST_USER_BYPASS_ENABLED;
+    }
+
+    /**
+     * Attempts to log in with the given userId (PIN) and password.
+     *
+     * Behaviour:
+     *  - If both userId and password are blank AND the bypass switch is on,
+     *    logs in as whichever employee record is flagged testUser=true in
+     *    the JSON (falls back to a transient in-memory Test User if none
+     *    is flagged, so this never hard-fails).
+     *  - Otherwise does a normal PIN + password lookup against the loaded
+     *    employee map. Password check is plain string equality for now
+     *    (NO encryption yet â€” that's a later step, explicitly out of scope
+     *    for this pass).
+     *
+     * @return the matched Employee on success, or null on failed login.
+     */
+    public Employee login(String userId, String password) {
+        boolean blankUserId = (userId == null || userId.isBlank());
+        boolean blankPassword = (password == null || password.isBlank());
+
+        if (blankUserId && blankPassword && TEST_USER_BYPASS_ENABLED) {
+            Employee testUser = findFlaggedTestUser();
+            if (testUser != null) {
+                testUser.setStatus("online");
+                return testUser;
+            }
+            // Safety net: bypass is on but no testUser:true record exists in
+            // the JSON. Don't lock the operator out â€” hand back a throwaway
+            // default so the checkout flow can still proceed.
+            return new Employee("User", "Test", 0.0, "0000", "", "online", true);
+        }
+
+        Employee match = employeeDatabase.get(userId);
+        if (match == null) return null;
+
+        // NOTE: plaintext comparison only, see class javadoc.
+        if (!match.getPassword().equals(password)) return null;
+
+        match.setStatus("online");
+        return match;
+    }
+
+    private Employee findFlaggedTestUser() {
+        return employeeDatabase.values().stream()
+                .filter(Employee::isTestUser)
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * Marks an employee offline on logout. Safe to call even if they were
+     * never found via login() (e.g. the throwaway fallback Test User).
+     */
+    public void logout(Employee employee) {
+        if (employee == null) return;
+        Employee tracked = employeeDatabase.get(employee.getUserId());
+        if (tracked != null) tracked.setStatus("offline");
+    }
+
+    public Map<String, Employee> getAllEmployees() {
+        return employeeDatabase;
+    }
+}
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\java\com\grocerypos\util\AdMediaValidator.java ==
+package com.grocerypos.util;
+
+import javafx.scene.image.Image;
+//import javafx.scene.media.Media;
+import java.io.InputStream;
+
+public class AdMediaValidator {
+
+    /**
+     * Evaluates a resource asset against an aspect ratio rule.
+     * Returns true if valid, or logs a quiet error and returns false to trigger fallback.
+     */
+    public static boolean validateImageRatio(String path, double targetRatio) {
+        try (InputStream is = AdMediaValidator.class.getResourceAsStream(path)) {
+            if (is == null) {
+                System.err.println("[QUIET ERROR] Ad asset not found at path: " + path + " -> Using fallback.");
+                return false;
+            }
+
+            // Loading with background loading set to false to fetch size immediately
+            Image img = new Image(is);
+            if (img.isError()) {
+                System.err.println("[QUIET ERROR] Failed to parse image payload: " + path + " -> Using fallback.");
+                return false;
+            }
+
+            double actualRatio = img.getWidth() / img.getHeight();
+            // Allow a tiny margin of floating point tolerance (e.g., 0.05)
+            if (Math.abs(actualRatio - targetRatio) > 0.05) {
+                System.err.printf("[QUIET ERROR] Aspect ratio mismatch for '%s'. Expected ~%.2f, got %.2f -> Using fallback.%n",
+                        path, targetRatio, actualRatio);
+                return false;
+            }
+
+            return true;
+        } catch (Exception e) {
+            System.err.println("[QUIET ERROR] Exception checking ad dimension matrix: " + e.getMessage() + " -> Using fallback.");
+            return false;
+        }
+    }
+}
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\test\java\com\grocerypos\service\CartServiceTransparencyTest.java ==
+package com.grocerypos.service;
+
+import com.grocerypos.model.Product;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import java.math.BigDecimal;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class CartServiceTransparencyTest {
+
+    private CartService cartService;
+
+    @BeforeEach
+    public void setUp() {
+        cartService = new CartService();
+        // Clear any previous static data or state
+        cartService.clearCart();
+    }
+
+    @Test
+    public void testNoHiddenCostsOnIndividualAndQuantityScans() {
+        // Given a known catalog item
+        String itemBarcode = "444"; // e.g., Cadbury Dairy Milk
+        BigDecimal individualPrice = new BigDecimal("5.50");
+
+        // When a product is scanned individually
+        cartService.scanItemByBarcode(itemBarcode);
+
+        // Then total must match exactly
+        assertEquals(individualPrice, cartService.getGrandTotal(),
+                "CRITICAL: Base cart total must equal the individual item price precisely.");
+
+        // When a quantity multiplier of 4 is set
+        cartService.setMultiplier(4);
+        cartService.scanItemByBarcode(itemBarcode);
+
+        // Expected calculation: 1 item ($5.50) + 4 items ($22.00) = $27.50
+        BigDecimal expectedTotal = individualPrice.multiply(new BigDecimal("5"));
+
+        assertEquals(expectedTotal, cartService.getGrandTotal(),
+                "ANTI-FRAUD: Calculated sum must be perfectly transparent across multiple additions.");
+
+        // Assert multiplier safely resets to 1 to avoid accidental trailing costs on subsequent items
+        cartService.scanItemByBarcode(itemBarcode);
+        BigDecimal postTotal = expectedTotal.add(individualPrice);
+        assertEquals(postTotal, cartService.getGrandTotal(),
+                "SECURITY: Multiplier did not stick; subsequent scan processed cleanly at quantity 1.");
+    }
+}
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\test\java\com\grocerypos\view\CustomerDisplayTransparencyTest.java ==
+package com.grocerypos.view;
+
+import com.grocerypos.app.StageManager;
+import com.grocerypos.service.CartService;
+import javafx.application.Platform;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.stage.Stage;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.testfx.framework.junit5.ApplicationTest;
+import org.testfx.util.WaitForAsyncUtils;
+
+import java.math.BigDecimal;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class CustomerDisplayTransparencyTest extends ApplicationTest {
+
+    private StageManager stageManager;
+    private CartService operationalCartService;
+
+    @BeforeAll
+    public static void setupHeadlessMode() {
+        // Initializes the native JavaFX subsystem on Java 24 without requiring Monocle
+        Platform.startup(() -> {});
+    }
+
+    @Override
+    public void start(Stage stage) throws Exception {
+        stageManager = new StageManager();
+        stageManager.launchDisplays(stage);
+        operationalCartService = stageManager.getCartService();
+
+        Platform.runLater(() -> operationalCartService.clearCart());
+        interact(() -> {});
+    }
+
+    @Test
+    public void testCustomerPaneSynchronizesAndShowsExactTotals() {
+        // â”€â”€ STEP 1: DIRECT STATE MUTATION & UI SYNCHRONIZATION â”€â”€
+        interact(() -> {
+            // 1. Force state modification via the backend service directly
+            boolean success = operationalCartService.scanItemByBarcode("444");
+            assertTrue(success, "The test barcode '444' must exist inside the CartService catalog.");
+
+            // 2. CRITICAL FIX: Explicitly command the customer display controller
+            // to process the new data state and swap panels right now!
+            stageManager.getCustomerController().syncDisplayView();
+        });
+
+        // â”€â”€ STEP 2: FLUSH RENDER LOOP PIPELINE â”€â”€
+        // Ensure JavaFX thread completely finishes drawing the new layout trees
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // â”€â”€ STEP 3: ASSERTS RUN INSTANTLY AT WARP SPEED â”€â”€
+        ListView<?> customerCartList = lookup("#listItemsView").queryListView();
+        Label customerTotalLabel = lookup("#lblCustomerGrandTotal").queryAs(Label.class);
+
+        int backendItemCount = operationalCartService.getActiveCart().size();
+        BigDecimal backendCalculatedTotal = operationalCartService.getGrandTotal();
+
+        // 1. Audit hidden fees / phantom items
+        assertEquals(backendItemCount, customerCartList.getItems().size(),
+                "FRAUD EXPLOIT DETECTED: Customer interface rows diverge from backend cart lengths!");
+
+        // 2. Audit literal output values
+        String displayedText = customerTotalLabel.getText();
+        assertNotNull(displayedText, "The customer grand total pricing text label must not be null.");
+
+        assertTrue(displayedText.contains(backendCalculatedTotal.toString()),
+                "HIDDEN FEE DETECTED: The checkout interface value ($" + displayedText
+                        + ") deviates from backend transactional metrics ($" + backendCalculatedTotal + ")!");
+    }
+}
+PS D:\Start_Here\User_Files\Code\java\grocery-pos-system>

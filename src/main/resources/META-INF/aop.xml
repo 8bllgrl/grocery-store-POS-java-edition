@@ -1,0 +1,8 @@
+<aspectj>
+    <aspects>
+        <aspect name="com.grocerypos.aspect.LoggingAspect"/>
+    </aspects>
+    <weaver options="-verbose">
+        <include within="com.grocerypos..*"/>
+    </weaver>
+</aspectj>

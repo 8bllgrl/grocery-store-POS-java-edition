@@ -1,5 +1,7 @@
 package com.grocerypos.controller;
 
+import com.grocerypos.model.Employee;
+import com.grocerypos.service.EmployeeService;
 import com.grocerypos.controller.component.NumpadController;
 import com.grocerypos.controller.component.StatusBarController;
 import com.grocerypos.controller.component.TopBarController;
@@ -58,8 +60,11 @@ public class EmployeeController {
     private CredFocus credFocus = CredFocus.USERNAME;
 
     private CartService cartService;
+    private final EmployeeService employeeService = new EmployeeService();
+    private Employee currentEmployee;
     private CustomerController customerController;
     private final StringBuilder inputAccumulator = new StringBuilder();
+
 
     // ── Lifecycle ────────────────────────────────────────────────────────────
 
@@ -151,8 +156,18 @@ public class EmployeeController {
 
     private void handleCredSubmit() {
         String uid = txtUsername.getText();
-        if (uid == null || uid.isEmpty()) uid = "Teller #104";
-        topBarController.setOperatorName(uid);
+        String pwd = txtPassword.getText();
+
+        Employee result = employeeService.login(uid, pwd);
+
+        if (result == null) {
+            new Alert(Alert.AlertType.WARNING, "Login failed. Check PIN and password.").showAndWait();
+            handleCredClear();
+            return;
+        }
+
+        currentEmployee = result;
+        topBarController.setOperatorName(currentEmployee.getFullName());
 
         paneCredentials.setVisible(false);
         paneLoading.setVisible(true);
@@ -212,6 +227,9 @@ public class EmployeeController {
     }
 
     private void handleLogoutSequence() {
+        employeeService.logout(currentEmployee);
+        currentEmployee = null;
+
         paneMainPOS.setVisible(false);
         paneAd.setVisible(true);
         topBarController.setOperatorName("Not Authenticated");

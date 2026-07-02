@@ -1,0 +1,731 @@
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Install the latest PowerShell for new features and improvements! https://aka.ms/PSWindows
+
+PS D:\Start_Here\User_Files\Code\java\grocery-pos-system> Get-ChildItem -Recurse -Include  *.fxml | ForEach-Object {
+>>     Write-Output "== $($_.FullName) =="
+>>     Get-Content $_.FullName
+>> }
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\resources\com\grocerypos\view\components\numpad.fxml ==
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.control.Button?>
+
+<!--
+    NumpadComponent â€” reusable 3Ã—4 numeric keypad.
+    Parent controller calls NumpadController.configure() after fx:include loads this.
+-->
+<GridPane hgap="10" vgap="10" alignment="CENTER"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.grocerypos.controller.component.NumpadController">
+
+    <Button text="1" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+    <Button text="2" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+    <Button text="3" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="2" GridPane.rowIndex="0"/>
+    <Button text="4" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+    <Button text="5" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+    <Button text="6" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
+    <Button text="7" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+    <Button text="8" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+    <Button text="9" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="2" GridPane.rowIndex="2"/>
+
+    <!-- Bottom row: CLR | 0 | action button â€” labels/colours set by parent via configure() -->
+    <Button fx:id="btnClear"  onAction="#handleClear"  prefWidth="70" prefHeight="50" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+    <Button text="0"          onAction="#handleNum"    prefWidth="70" prefHeight="50" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+    <Button fx:id="btnAction" onAction="#handleAction" prefWidth="70" prefHeight="50" GridPane.columnIndex="2" GridPane.rowIndex="3"/>
+
+</GridPane>
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\resources\com\grocerypos\view\components\product_row.fxml ==
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
+
+<!--
+    ProductRowComponent â€” a single catalog row in the debug console.
+    Parent calls ProductRowController.configure(product, onScan) to populate data.
+-->
+<HBox alignment="CENTER_LEFT" spacing="0"
+    style="-fx-background-color: #111111; -fx-padding: 8 10; -fx-background-radius: 3;"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.grocerypos.controller.component.ProductRowController">
+
+    <VBox HBox.hgrow="ALWAYS" spacing="2">
+        <Label fx:id="lblBarcodeName" text=""
+            style="-fx-text-fill: #cccccc; -fx-font-size: 12px; -fx-font-family: 'Courier New';"/>
+        <Label fx:id="lblPrice" text=""
+            style="-fx-text-fill: #555555; -fx-font-size: 10px; -fx-font-family: 'Courier New';"/>
+    </VBox>
+
+    <Button fx:id="btnScan" text="SCAN" onAction="#handleScan"
+        style="-fx-background-color: #003300; -fx-text-fill: #00ff41; -fx-font-family: 'Courier New';
+               -fx-font-size: 11px; -fx-font-weight: bold; -fx-border-color: #00aa2e; -fx-border-width: 1;
+               -fx-background-radius: 2; -fx-border-radius: 2; -fx-padding: 6 14; -fx-cursor: hand;"/>
+
+</HBox>
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\resources\com\grocerypos\view\components\status_bar.fxml ==
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.control.Button?>
+
+<!--
+    StatusBarComponent â€” bottom dock bar with peripheral actions and logout.
+    Parent calls StatusBarController.configure() to inject all button callbacks.
+-->
+<HBox
+    style="-fx-background-color: #1a252f; -fx-padding: 10;"
+    spacing="15"
+    alignment="CENTER_LEFT"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.grocerypos.controller.component.StatusBarController">
+
+    <Button text="ðŸ“‚ Open Drawer"  onAction="#handleOpenDrawer"  style="-fx-background-color: #34495e; -fx-text-fill: white;"/>
+    <Button text="ðŸ–¨ï¸ Print Docket" onAction="#handlePrintDocket" style="-fx-background-color: #34495e; -fx-text-fill: white;"/>
+    <Button text="ðŸŽ« User Barcode" onAction="#handleUserBarcode" style="-fx-background-color: #34495e; -fx-text-fill: white;"/>
+    <Region HBox.hgrow="ALWAYS"/>
+    <Button text="âŒ Secure Logout" onAction="#handleLogout"
+        style="-fx-background-color: #c0392b; -fx-text-fill: white; -fx-font-weight: bold;"/>
+
+</HBox>
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\resources\com\grocerypos\view\components\top_bar.fxml ==
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.control.Label?>
+
+<!--
+    TopBarComponent â€” application header bar with store info, operator name, and live clock.
+    Parent calls TopBarController.setOperatorName() to update after login/logout.
+-->
+<HBox spacing="20"
+    style="-fx-background-color: #1a252f; -fx-padding: 10;"
+    alignment="CENTER_LEFT"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.grocerypos.controller.component.TopBarController">
+
+    <Label text="GroceryPOS v0.1.0"       style="-fx-text-fill: #bdc3c7; -fx-font-weight: bold;"/>
+    <Label text="Store #4021 - Springfield" style="-fx-text-fill: #bdc3c7;"/>
+    <Region HBox.hgrow="ALWAYS"/>
+    <Label fx:id="lblEmployee" text="Operator: Not Authenticated"
+        style="-fx-text-fill: #3498db; -fx-font-weight: bold;"/>
+    <Label fx:id="lblClock" text="00:00:00"
+        style="-fx-text-fill: #2ecc71; -fx-font-family: 'Courier New'; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+
+</HBox>
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\resources\com\grocerypos\view\customer_view.fxml ==
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+
+<!--
+    Customer-facing display.
+    No components extracted here â€” this view has no reused sub-structures.
+    CustomerController.syncDisplayView() drives all updates from the shared CartService.
+-->
+<StackPane prefWidth="600.0" prefHeight="768.0"
+    style="-fx-background-color: #2c3e50;"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.grocerypos.controller.CustomerController">
+
+    <VBox fx:id="customerIdlePane" alignment="CENTER" spacing="20"
+        style="-fx-background-color: #115329;">
+        <Label text="WOOLWORTHS"
+            style="-fx-text-fill: white; -fx-font-size: 38px; -fx-font-weight: bold;"/>
+        <Label text="Fresh Food People - Session Idle"
+            style="-fx-text-fill: #ecc94b; -fx-font-size: 16px;"/>
+    </VBox>
+
+    <VBox fx:id="customerActivePane" visible="false"
+        style="-fx-padding: 20;" spacing="15">
+        <HBox style="-fx-background-color: #1a252f; -fx-padding: 10;" alignment="CENTER_LEFT">
+            <Label text="CURRENT CART MATRIX" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+        </HBox>
+        <ListView fx:id="listItemsView" VBox.vgrow="ALWAYS"
+            style="-fx-font-size: 16px; -fx-font-family: 'Courier New';"/>
+        <HBox alignment="CENTER_RIGHT"
+            style="-fx-padding: 15; -fx-background-color: #1a252f;">
+            <Label text="TOTAL TO PAY: "
+                style="-fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;"/>
+            <Label fx:id="lblCustomerGrandTotal" text="/$0.00"
+                style="-fx-text-fill: #2ecc71; -fx-font-size: 28px; -fx-font-weight: bold;"/>
+        </HBox>
+    </VBox>
+
+</StackPane>
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\resources\com\grocerypos\view\debug_view.fxml ==
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.ScrollPane?>
+
+<!--
+    Debug console view.
+    The product catalog rows are no longer hardcoded here â€” DebugController
+    dynamically builds ProductRow components from the catalog list and adds
+    them to catalogContainer at runtime.
+-->
+<VBox prefWidth="420" prefHeight="580" spacing="0"
+    style="-fx-background-color: #0a0a0a; -fx-font-family: 'Courier New';"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.grocerypos.controller.DebugController">
+
+    <!-- Title bar -->
+    <HBox style="-fx-background-color: #1a1a1a; -fx-padding: 8 12;" spacing="10" alignment="CENTER_LEFT">
+        <Label text="â–¶" style="-fx-text-fill: #00ff41; -fx-font-size: 11px;"/>
+        <Label text="DEBUG CONSOLE"
+            style="-fx-text-fill: #00ff41; -fx-font-size: 11px; -fx-font-weight: bold;"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label text="MODE: SIMULATION" style="-fx-text-fill: #444444; -fx-font-size: 10px;"/>
+    </HBox>
+
+    <Separator style="-fx-background-color: #00ff41; -fx-opacity: 0.3;"/>
+
+    <!-- Session log -->
+    <VBox style="-fx-padding: 10 12 6 12;" spacing="3">
+        <Label text="/$ grocerypos debug"       style="-fx-text-fill: #555555; -fx-font-size: 10px;"/>
+        <Label text="  [OK] Debug mode active"  style="-fx-text-fill: #00aa2e; -fx-font-size: 10px;"/>
+        <Label text="  [OK] CartService bound"  style="-fx-text-fill: #00aa2e; -fx-font-size: 10px;"/>
+        <Label text="  [  ] Awaiting scan trigger..." style="-fx-text-fill: #555555; -fx-font-size: 10px;"/>
+    </VBox>
+
+    <Separator style="-fx-background-color: #222222;"/>
+
+    <!-- Catalog list â€” rows are injected by DebugController.buildCatalogRows() -->
+    <VBox VBox.vgrow="ALWAYS" style="-fx-padding: 12;" spacing="6">
+        <Label text="â”€â”€ PRODUCT CATALOG / CONVEYOR SIMULATOR â”€â”€"
+            style="-fx-text-fill: #336633; -fx-font-size: 10px;"/>
+        <Label text="" style="-fx-font-size: 4px;"/>
+
+        <!-- ProductRow components are added here at runtime -->
+        <VBox fx:id="catalogContainer" spacing="6"/>
+
+        <Region VBox.vgrow="ALWAYS"/>
+        <Separator style="-fx-background-color: #1a1a1a;"/>
+        <Label fx:id="lblDebugStatus" text="&gt; ready"
+            style="-fx-text-fill: #336633; -fx-font-size: 10px; -fx-padding: 4 0 0 0;"/>
+    </VBox>
+
+</VBox>
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\src\main\resources\com\grocerypos\view\employee_view.fxml ==
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TableColumn?>
+
+<VBox prefWidth="1024.0" prefHeight="768.0"
+    style="-fx-background-color: #111111;"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.grocerypos.controller.EmployeeController">
+
+    <!-- â”€â”€ TopBar component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <fx:include fx:id="topBar" source="components/top_bar.fxml"/>
+
+    <!-- â”€â”€ Screen stack â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <StackPane VBox.vgrow="ALWAYS">
+
+        <!-- Ad / idle screen -->
+        <VBox fx:id="paneAd" alignment="CENTER"
+            style="-fx-background-color: #0d2c16;"
+            onMouseClicked="#handleAdClick">
+            <Label text="WOOLWORTHS ENTERPRISE POS"
+                style="-fx-text-fill: #2ecc71; -fx-font-size: 32px; -fx-font-weight: bold;"/>
+            <Label text="[ REGISTER IDLE - TAP MONITOR TO BEGIN OUTLET SESSION ]"
+                style="-fx-text-fill: white; -fx-font-size: 14px;"/>
+        </VBox>
+
+        <!-- Login screen -->
+        <HBox fx:id="paneLogin" visible="false" alignment="CENTER" spacing="50"
+            style="-fx-background-color: #2c3e50;">
+            <VBox alignment="CENTER" spacing="15">
+                <Label text="WOOLWORTHS"
+                    style="-fx-text-fill: #2ecc71; -fx-font-size: 40px; -fx-font-weight: bold;"/>
+                <Label text="Store System Terminal Gateway" style="-fx-text-fill: #bdc3c7;"/>
+            </VBox>
+            <VBox alignment="CENTER" spacing="15"
+                style="-fx-background-color: #34495e; -fx-padding: 30; -fx-background-radius: 8;">
+                <Label text="Secure Portal Authentication"
+                    style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                <Button text="INITIALIZE LOGIN SEQUENCE" onAction="#handleLoginClick"
+                    style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 12 24;"/>
+            </VBox>
+        </HBox>
+
+        <!-- Credentials screen (numpad login) -->
+        <VBox fx:id="paneCredentials" visible="false" alignment="CENTER" spacing="20"
+            style="-fx-background-color: #2c3e50;">
+            <VBox maxWidth="400" spacing="15"
+                style="-fx-background-color: #34495e; -fx-padding: 30; -fx-background-radius: 8;">
+                <Label text="ENTER OPERATOR ID NUMBER"
+                    style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                <TextField fx:id="txtUsername"/>
+                <PasswordField fx:id="txtPassword"/>
+                <!-- NumpadComponent â€” configured with ENT/CLR via EmployeeController.wireComponents() -->
+                <fx:include fx:id="credNumpad" source="components/numpad.fxml"/>
+            </VBox>
+        </VBox>
+
+        <!-- Loading screen -->
+        <VBox fx:id="paneLoading" visible="false" alignment="CENTER" spacing="15"
+            style="-fx-background-color: #111111;">
+            <ProgressIndicator prefWidth="60" prefHeight="60"/>
+            <Label text="Allocating Session Infrastructure. Please standby..."
+                style="-fx-text-fill: #95a5a6;"/>
+        </VBox>
+
+        <!-- Main POS screen -->
+        <VBox fx:id="paneMainPOS" visible="false">
+            <HBox VBox.vgrow="ALWAYS">
+
+                <!-- Left: cart table -->
+                <VBox HBox.hgrow="ALWAYS" prefWidth="600"
+                    style="-fx-padding: 15; -fx-background-color: #1c2833;">
+                    <TableView fx:id="tableCart" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="colName"      text="Item Name (Abbrv)" prefWidth="240"/>
+                            <TableColumn fx:id="colQty"       text="Qty"               prefWidth="60"/>
+                            <TableColumn fx:id="colUnitPrice" text="Unit Price"         prefWidth="100"/>
+                            <TableColumn fx:id="colLineTotal" text="Line Total"         prefWidth="120"/>
+                        </columns>
+                    </TableView>
+                    <HBox alignment="CENTER_RIGHT" style="-fx-padding: 10 0 0 0;">
+                        <Label text="RUNNING BALANCE DUE: "
+                            style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+                        <Label fx:id="lblTotalBalance" text="/$0.00"
+                            style="-fx-text-fill: #2ecc71; -fx-font-size: 28px; -fx-font-weight: bold;"/>
+                    </HBox>
+                </VBox>
+
+                <!-- Right: controls panel -->
+                <VBox prefWidth="424"
+                    style="-fx-padding: 15; -fx-background-color: #2c3e50;"
+                    spacing="15">
+
+                    <Label text="MANUAL PRODUCT REGISTRY INPUT"
+                        style="-fx-text-fill: #bdc3c7; -fx-font-weight: bold;"/>
+                    <HBox spacing="10">
+                        <TextField fx:id="txtScannerBuffer" HBox.hgrow="ALWAYS"/>
+                        <Button text="ENTER CODE" onAction="#handleManualScan"
+                            style="-fx-background-color: #3498db; -fx-text-fill: white;"/>
+                    </HBox>
+
+                    <Label text="ITEM QUANTITY MULTIPLIER NUMPAD"
+                        style="-fx-text-fill: #bdc3c7; -fx-font-weight: bold;"/>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Pending Multiplier Scale:" style="-fx-text-fill: white;"/>
+                        <Label fx:id="lblMultiplierScale" text="1"
+                            style="-fx-text-fill: #e67e22; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+                    </HBox>
+
+                    <!-- NumpadComponent â€” configured with QTY/CLR via EmployeeController.wireComponents() -->
+                    <fx:include fx:id="posNumpad" source="components/numpad.fxml"/>
+
+                    <Region VBox.vgrow="ALWAYS"/>
+                    <HBox spacing="10">
+                        <Button text="CASH SALE"   onAction="#handlePaymentAction"
+                            prefWidth="150" prefHeight="60"
+                            style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                        <Button text="EFTPOS CARD" onAction="#handlePaymentAction"
+                            prefWidth="150" prefHeight="60"
+                            style="-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                    </HBox>
+                </VBox>
+            </HBox>
+
+            <!-- StatusBar component -->
+            <fx:include fx:id="statusBar" source="components/status_bar.fxml"/>
+        </VBox>
+
+    </StackPane>
+</VBox>
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\target\classes\com\grocerypos\view\components\numpad.fxml ==
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.control.Button?>
+
+<!--
+    NumpadComponent â€” reusable 3Ã—4 numeric keypad.
+    Parent controller calls NumpadController.configure() after fx:include loads this.
+-->
+<GridPane hgap="10" vgap="10" alignment="CENTER"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.grocerypos.controller.component.NumpadController">
+
+    <Button text="1" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+    <Button text="2" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+    <Button text="3" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="2" GridPane.rowIndex="0"/>
+    <Button text="4" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+    <Button text="5" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+    <Button text="6" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
+    <Button text="7" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+    <Button text="8" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+    <Button text="9" onAction="#handleNum" prefWidth="70" prefHeight="50" GridPane.columnIndex="2" GridPane.rowIndex="2"/>
+
+    <!-- Bottom row: CLR | 0 | action button â€” labels/colours set by parent via configure() -->
+    <Button fx:id="btnClear"  onAction="#handleClear"  prefWidth="70" prefHeight="50" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+    <Button text="0"          onAction="#handleNum"    prefWidth="70" prefHeight="50" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+    <Button fx:id="btnAction" onAction="#handleAction" prefWidth="70" prefHeight="50" GridPane.columnIndex="2" GridPane.rowIndex="3"/>
+
+</GridPane>
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\target\classes\com\grocerypos\view\components\product_row.fxml ==
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
+
+<!--
+    ProductRowComponent â€” a single catalog row in the debug console.
+    Parent calls ProductRowController.configure(product, onScan) to populate data.
+-->
+<HBox alignment="CENTER_LEFT" spacing="0"
+    style="-fx-background-color: #111111; -fx-padding: 8 10; -fx-background-radius: 3;"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.grocerypos.controller.component.ProductRowController">
+
+    <VBox HBox.hgrow="ALWAYS" spacing="2">
+        <Label fx:id="lblBarcodeName" text=""
+            style="-fx-text-fill: #cccccc; -fx-font-size: 12px; -fx-font-family: 'Courier New';"/>
+        <Label fx:id="lblPrice" text=""
+            style="-fx-text-fill: #555555; -fx-font-size: 10px; -fx-font-family: 'Courier New';"/>
+    </VBox>
+
+    <Button fx:id="btnScan" text="SCAN" onAction="#handleScan"
+        style="-fx-background-color: #003300; -fx-text-fill: #00ff41; -fx-font-family: 'Courier New';
+               -fx-font-size: 11px; -fx-font-weight: bold; -fx-border-color: #00aa2e; -fx-border-width: 1;
+               -fx-background-radius: 2; -fx-border-radius: 2; -fx-padding: 6 14; -fx-cursor: hand;"/>
+
+</HBox>
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\target\classes\com\grocerypos\view\components\status_bar.fxml ==
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.control.Button?>
+
+<!--
+    StatusBarComponent â€” bottom dock bar with peripheral actions and logout.
+    Parent calls StatusBarController.configure() to inject all button callbacks.
+-->
+<HBox
+    style="-fx-background-color: #1a252f; -fx-padding: 10;"
+    spacing="15"
+    alignment="CENTER_LEFT"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.grocerypos.controller.component.StatusBarController">
+
+    <Button text="ðŸ“‚ Open Drawer"  onAction="#handleOpenDrawer"  style="-fx-background-color: #34495e; -fx-text-fill: white;"/>
+    <Button text="ðŸ–¨ï¸ Print Docket" onAction="#handlePrintDocket" style="-fx-background-color: #34495e; -fx-text-fill: white;"/>
+    <Button text="ðŸŽ« User Barcode" onAction="#handleUserBarcode" style="-fx-background-color: #34495e; -fx-text-fill: white;"/>
+    <Region HBox.hgrow="ALWAYS"/>
+    <Button text="âŒ Secure Logout" onAction="#handleLogout"
+        style="-fx-background-color: #c0392b; -fx-text-fill: white; -fx-font-weight: bold;"/>
+
+</HBox>
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\target\classes\com\grocerypos\view\components\top_bar.fxml ==
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.control.Label?>
+
+<!--
+    TopBarComponent â€” application header bar with store info, operator name, and live clock.
+    Parent calls TopBarController.setOperatorName() to update after login/logout.
+-->
+<HBox spacing="20"
+    style="-fx-background-color: #1a252f; -fx-padding: 10;"
+    alignment="CENTER_LEFT"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.grocerypos.controller.component.TopBarController">
+
+    <Label text="GroceryPOS v0.1.0"       style="-fx-text-fill: #bdc3c7; -fx-font-weight: bold;"/>
+    <Label text="Store #4021 - Springfield" style="-fx-text-fill: #bdc3c7;"/>
+    <Region HBox.hgrow="ALWAYS"/>
+    <Label fx:id="lblEmployee" text="Operator: Not Authenticated"
+        style="-fx-text-fill: #3498db; -fx-font-weight: bold;"/>
+    <Label fx:id="lblClock" text="00:00:00"
+        style="-fx-text-fill: #2ecc71; -fx-font-family: 'Courier New'; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+
+</HBox>
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\target\classes\com\grocerypos\view\customer_view.fxml ==
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+
+<!--
+    Customer-facing display.
+    No components extracted here â€” this view has no reused sub-structures.
+    CustomerController.syncDisplayView() drives all updates from the shared CartService.
+-->
+<StackPane prefWidth="600.0" prefHeight="768.0"
+    style="-fx-background-color: #2c3e50;"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.grocerypos.controller.CustomerController">
+
+    <VBox fx:id="customerIdlePane" alignment="CENTER" spacing="20"
+        style="-fx-background-color: #115329;">
+        <Label text="WOOLWORTHS"
+            style="-fx-text-fill: white; -fx-font-size: 38px; -fx-font-weight: bold;"/>
+        <Label text="Fresh Food People - Session Idle"
+            style="-fx-text-fill: #ecc94b; -fx-font-size: 16px;"/>
+    </VBox>
+
+    <VBox fx:id="customerActivePane" visible="false"
+        style="-fx-padding: 20;" spacing="15">
+        <HBox style="-fx-background-color: #1a252f; -fx-padding: 10;" alignment="CENTER_LEFT">
+            <Label text="CURRENT CART MATRIX" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+        </HBox>
+        <ListView fx:id="listItemsView" VBox.vgrow="ALWAYS"
+            style="-fx-font-size: 16px; -fx-font-family: 'Courier New';"/>
+        <HBox alignment="CENTER_RIGHT"
+            style="-fx-padding: 15; -fx-background-color: #1a252f;">
+            <Label text="TOTAL TO PAY: "
+                style="-fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;"/>
+            <Label fx:id="lblCustomerGrandTotal" text="/$0.00"
+                style="-fx-text-fill: #2ecc71; -fx-font-size: 28px; -fx-font-weight: bold;"/>
+        </HBox>
+    </VBox>
+
+</StackPane>
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\target\classes\com\grocerypos\view\debug_view.fxml ==
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.ScrollPane?>
+
+<!--
+    Debug console view.
+    The product catalog rows are no longer hardcoded here â€” DebugController
+    dynamically builds ProductRow components from the catalog list and adds
+    them to catalogContainer at runtime.
+-->
+<VBox prefWidth="420" prefHeight="580" spacing="0"
+    style="-fx-background-color: #0a0a0a; -fx-font-family: 'Courier New';"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.grocerypos.controller.DebugController">
+
+    <!-- Title bar -->
+    <HBox style="-fx-background-color: #1a1a1a; -fx-padding: 8 12;" spacing="10" alignment="CENTER_LEFT">
+        <Label text="â–¶" style="-fx-text-fill: #00ff41; -fx-font-size: 11px;"/>
+        <Label text="DEBUG CONSOLE"
+            style="-fx-text-fill: #00ff41; -fx-font-size: 11px; -fx-font-weight: bold;"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label text="MODE: SIMULATION" style="-fx-text-fill: #444444; -fx-font-size: 10px;"/>
+    </HBox>
+
+    <Separator style="-fx-background-color: #00ff41; -fx-opacity: 0.3;"/>
+
+    <!-- Session log -->
+    <VBox style="-fx-padding: 10 12 6 12;" spacing="3">
+        <Label text="/$ grocerypos debug"       style="-fx-text-fill: #555555; -fx-font-size: 10px;"/>
+        <Label text="  [OK] Debug mode active"  style="-fx-text-fill: #00aa2e; -fx-font-size: 10px;"/>
+        <Label text="  [OK] CartService bound"  style="-fx-text-fill: #00aa2e; -fx-font-size: 10px;"/>
+        <Label text="  [  ] Awaiting scan trigger..." style="-fx-text-fill: #555555; -fx-font-size: 10px;"/>
+    </VBox>
+
+    <Separator style="-fx-background-color: #222222;"/>
+
+    <!-- Catalog list â€” rows are injected by DebugController.buildCatalogRows() -->
+    <VBox VBox.vgrow="ALWAYS" style="-fx-padding: 12;" spacing="6">
+        <Label text="â”€â”€ PRODUCT CATALOG / CONVEYOR SIMULATOR â”€â”€"
+            style="-fx-text-fill: #336633; -fx-font-size: 10px;"/>
+        <Label text="" style="-fx-font-size: 4px;"/>
+
+        <!-- ProductRow components are added here at runtime -->
+        <VBox fx:id="catalogContainer" spacing="6"/>
+
+        <Region VBox.vgrow="ALWAYS"/>
+        <Separator style="-fx-background-color: #1a1a1a;"/>
+        <Label fx:id="lblDebugStatus" text="&gt; ready"
+            style="-fx-text-fill: #336633; -fx-font-size: 10px; -fx-padding: 4 0 0 0;"/>
+    </VBox>
+
+</VBox>
+== D:\Start_Here\User_Files\Code\java\grocery-pos-system\target\classes\com\grocerypos\view\employee_view.fxml ==
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TableColumn?>
+
+<VBox prefWidth="1024.0" prefHeight="768.0"
+    style="-fx-background-color: #111111;"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.grocerypos.controller.EmployeeController">
+
+    <!-- â”€â”€ TopBar component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <fx:include fx:id="topBar" source="components/top_bar.fxml"/>
+
+    <!-- â”€â”€ Screen stack â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <StackPane VBox.vgrow="ALWAYS">
+
+        <!-- Ad / idle screen -->
+        <VBox fx:id="paneAd" alignment="CENTER"
+            style="-fx-background-color: #0d2c16;"
+            onMouseClicked="#handleAdClick">
+            <Label text="WOOLWORTHS ENTERPRISE POS"
+                style="-fx-text-fill: #2ecc71; -fx-font-size: 32px; -fx-font-weight: bold;"/>
+            <Label text="[ REGISTER IDLE - TAP MONITOR TO BEGIN OUTLET SESSION ]"
+                style="-fx-text-fill: white; -fx-font-size: 14px;"/>
+        </VBox>
+
+        <!-- Login screen -->
+        <HBox fx:id="paneLogin" visible="false" alignment="CENTER" spacing="50"
+            style="-fx-background-color: #2c3e50;">
+            <VBox alignment="CENTER" spacing="15">
+                <Label text="WOOLWORTHS"
+                    style="-fx-text-fill: #2ecc71; -fx-font-size: 40px; -fx-font-weight: bold;"/>
+                <Label text="Store System Terminal Gateway" style="-fx-text-fill: #bdc3c7;"/>
+            </VBox>
+            <VBox alignment="CENTER" spacing="15"
+                style="-fx-background-color: #34495e; -fx-padding: 30; -fx-background-radius: 8;">
+                <Label text="Secure Portal Authentication"
+                    style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                <Button text="INITIALIZE LOGIN SEQUENCE" onAction="#handleLoginClick"
+                    style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 12 24;"/>
+            </VBox>
+        </HBox>
+
+        <!-- Credentials screen (numpad login) -->
+        <VBox fx:id="paneCredentials" visible="false" alignment="CENTER" spacing="20"
+            style="-fx-background-color: #2c3e50;">
+            <VBox maxWidth="400" spacing="15"
+                style="-fx-background-color: #34495e; -fx-padding: 30; -fx-background-radius: 8;">
+                <Label text="ENTER OPERATOR ID NUMBER"
+                    style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                <TextField fx:id="txtUsername"/>
+                <PasswordField fx:id="txtPassword"/>
+                <!-- NumpadComponent â€” configured with ENT/CLR via EmployeeController.wireComponents() -->
+                <fx:include fx:id="credNumpad" source="components/numpad.fxml"/>
+            </VBox>
+        </VBox>
+
+        <!-- Loading screen -->
+        <VBox fx:id="paneLoading" visible="false" alignment="CENTER" spacing="15"
+            style="-fx-background-color: #111111;">
+            <ProgressIndicator prefWidth="60" prefHeight="60"/>
+            <Label text="Allocating Session Infrastructure. Please standby..."
+                style="-fx-text-fill: #95a5a6;"/>
+        </VBox>
+
+        <!-- Main POS screen -->
+        <VBox fx:id="paneMainPOS" visible="false">
+            <HBox VBox.vgrow="ALWAYS">
+
+                <!-- Left: cart table -->
+                <VBox HBox.hgrow="ALWAYS" prefWidth="600"
+                    style="-fx-padding: 15; -fx-background-color: #1c2833;">
+                    <TableView fx:id="tableCart" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="colName"      text="Item Name (Abbrv)" prefWidth="240"/>
+                            <TableColumn fx:id="colQty"       text="Qty"               prefWidth="60"/>
+                            <TableColumn fx:id="colUnitPrice" text="Unit Price"         prefWidth="100"/>
+                            <TableColumn fx:id="colLineTotal" text="Line Total"         prefWidth="120"/>
+                        </columns>
+                    </TableView>
+                    <HBox alignment="CENTER_RIGHT" style="-fx-padding: 10 0 0 0;">
+                        <Label text="RUNNING BALANCE DUE: "
+                            style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+                        <Label fx:id="lblTotalBalance" text="/$0.00"
+                            style="-fx-text-fill: #2ecc71; -fx-font-size: 28px; -fx-font-weight: bold;"/>
+                    </HBox>
+                </VBox>
+
+                <!-- Right: controls panel -->
+                <VBox prefWidth="424"
+                    style="-fx-padding: 15; -fx-background-color: #2c3e50;"
+                    spacing="15">
+
+                    <Label text="MANUAL PRODUCT REGISTRY INPUT"
+                        style="-fx-text-fill: #bdc3c7; -fx-font-weight: bold;"/>
+                    <HBox spacing="10">
+                        <TextField fx:id="txtScannerBuffer" HBox.hgrow="ALWAYS"/>
+                        <Button text="ENTER CODE" onAction="#handleManualScan"
+                            style="-fx-background-color: #3498db; -fx-text-fill: white;"/>
+                    </HBox>
+
+                    <Label text="ITEM QUANTITY MULTIPLIER NUMPAD"
+                        style="-fx-text-fill: #bdc3c7; -fx-font-weight: bold;"/>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Pending Multiplier Scale:" style="-fx-text-fill: white;"/>
+                        <Label fx:id="lblMultiplierScale" text="1"
+                            style="-fx-text-fill: #e67e22; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+                    </HBox>
+
+                    <!-- NumpadComponent â€” configured with QTY/CLR via EmployeeController.wireComponents() -->
+                    <fx:include fx:id="posNumpad" source="components/numpad.fxml"/>
+
+                    <Region VBox.vgrow="ALWAYS"/>
+                    <HBox spacing="10">
+                        <Button text="CASH SALE"   onAction="#handlePaymentAction"
+                            prefWidth="150" prefHeight="60"
+                            style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                        <Button text="EFTPOS CARD" onAction="#handlePaymentAction"
+                            prefWidth="150" prefHeight="60"
+                            style="-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                    </HBox>
+                </VBox>
+            </HBox>
+
+            <!-- StatusBar component -->
+            <fx:include fx:id="statusBar" source="components/status_bar.fxml"/>
+        </VBox>
+
+    </StackPane>
+</VBox>
