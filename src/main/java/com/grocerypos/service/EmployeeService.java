@@ -1,20 +1,19 @@
 package com.grocerypos.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grocerypos.model.Employee;
+import com.grocerypos.repository.EmployeeRepository;
 
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Loads employee login records from employees.json and handles login lookups.
+ * Loads employee login records from PostgreSQL and handles login lookups.
  *
- * Mirrors CartService's "read a JSON resource into an in-memory map" pattern.
- * No permissions/tags system yet â€” that's a deliberate later step. For now
- * this is purely: can we find a matching employee, and is their password right.
+ * Mirrors CartService's "load into an in-memory map" pattern, now backed by
+ * EmployeeRepository instead of employees.json. No permissions/tags system
+ * yet — that's a deliberate later step. For now this is purely: can we find
+ * a matching employee, and is their password right.
  */
 public class EmployeeService {
 
@@ -22,40 +21,32 @@ public class EmployeeService {
     private final Map<String, Employee> employeeDatabase = new HashMap<>();
 
     public EmployeeService() {
-        loadEmployeesFromJson();
+        loadEmployeesFromDatabase();
     }
 
-    private void loadEmployeesFromJson() {
-        ObjectMapper mapper = new ObjectMapper();
+    private void loadEmployeesFromDatabase() {
+        EmployeeRepository repository = new EmployeeRepository();
+        List<Employee> employees = repository.findAll();
 
-        try (InputStream is = getClass().getResourceAsStream("/com/grocerypos/data/employees.json")) {
-            if (is == null) {
-                System.err.println("Critical Error: employees.json resource file not found!");
-                return;
-            }
-
-            List<Employee> employees = mapper.readValue(is, new TypeReference<List<Employee>>() {});
-
-            for (Employee e : employees) {
-                employeeDatabase.put(e.getUserId(), e);
-            }
-
-            System.out.println("[SYSTEM] Successfully parsed " + employeeDatabase.size() + " employee records from JSON.");
-
-        } catch (Exception e) {
-            System.err.println("Critical Failure mapping employees.json payload: "
-                    + e.getClass().getSimpleName() + " - " + e.getMessage());
-            e.printStackTrace();
+        if (employees.isEmpty()) {
+            System.err.println("Critical Error: no employees loaded from database!");
+            return;
         }
+
+        for (Employee e : employees) {
+            employeeDatabase.put(e.getUserId(), e);
+        }
+
+        System.out.println("[SYSTEM] Successfully loaded " + employeeDatabase.size() + " employee records from PostgreSQL.");
     }
 
-    // ──────────────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────
     // TEST USER BYPASS SWITCH
     //
     // Set this to `false` to disable the blank-username/blank-password
     // shortcut entirely. This is the ONE line to comment/toggle to turn
     // the bypass off — everything else routes through isTestUserBypassEnabled().
-    // ──────────────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────
     private static final boolean TEST_USER_BYPASS_ENABLED = true;
 
     public boolean isTestUserBypassEnabled() {
@@ -68,7 +59,7 @@ public class EmployeeService {
      * Behaviour:
      *  - If both userId and password are blank AND the bypass switch is on,
      *    logs in as whichever employee record is flagged testUser=true in
-     *    the JSON (falls back to a transient in-memory Test User if none
+     *    the database (falls back to a transient in-memory Test User if none
      *    is flagged, so this never hard-fails).
      *  - Otherwise does a normal PIN + password lookup against the loaded
      *    employee map. Password check is plain string equality for now
@@ -88,7 +79,7 @@ public class EmployeeService {
                 return testUser;
             }
             // Safety net: bypass is on but no testUser:true record exists in
-            // the JSON. Don't lock the operator out — hand back a throwaway
+            // the database. Don't lock the operator out — hand back a throwaway
             // default so the checkout flow can still proceed.
             return new Employee("User", "Test", 0.0, "0000", "", "online", true);
         }
