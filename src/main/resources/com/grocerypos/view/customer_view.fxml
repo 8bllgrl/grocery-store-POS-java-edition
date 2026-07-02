@@ -36,7 +36,7 @@
             style="-fx-padding: 15; -fx-background-color: #1a252f;">
             <Label text="TOTAL TO PAY: "
                 style="-fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;"/>
-            <Label fx:id="lblCustomerTotal" text="/$0.00"
+            <Label fx:id="lblCustomerGrandTotal" text="/$0.00"
                 style="-fx-text-fill: #2ecc71; -fx-font-size: 28px; -fx-font-weight: bold;"/>
         </HBox>
     </VBox>

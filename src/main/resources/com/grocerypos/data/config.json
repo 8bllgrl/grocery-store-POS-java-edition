@@ -1,0 +1,21 @@
+{
+  "adSettings": {
+    "targetAspectRatio": "16:9",
+    "fallbackImage": "/com/grocerypos/view/images/fallback.png",
+    "rotationIntervalSeconds": 8
+  },
+  "ads": [
+    {
+      "type": "image",
+      "path": "/com/grocerypos/view/images/promo1.jpg"
+    },
+    {
+      "type": "gif",
+      "path": "/com/grocerypos/view/images/animated_deal.gif"
+    },
+    {
+      "type": "video",
+      "path": "/com/grocerypos/view/videos/ambient_ad.mp4"
+    }
+  ]
+}

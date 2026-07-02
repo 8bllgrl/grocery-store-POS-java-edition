@@ -10,7 +10,8 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 
 import java.io.IOException;
-import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class DebugController {
@@ -28,17 +29,26 @@ public class DebugController {
     }
 
     /**
-     * Dynamically builds one ProductRow component per product — replaces the
-     * four hardcoded HBox blocks that were in the original FXML.
+     * Dynamically builds one ProductRow component per product.
+     *
+     * FIX: this now reads the catalog from CartService.getAllProducts() — the
+     * same source of truth that powers real scans — instead of a hardcoded
+     * local list. The old hardcoded List.of(...) was a second, independent
+     * copy of the catalog that could silently drift out of sync with
+     * products.json (different barcodes/names/prices), which is exactly what
+     * caused the debug buttons to send barcodes the live CartService catalog
+     * no longer recognised.
      */
     private void buildCatalogRows() {
-        // In a real app this list would come from CartService/ProductRepository.
-        List<Product> catalog = List.of(
-            new Product("111", "WW Muesli Bars 6pk",  new BigDecimal("4.50")),
-            new Product("222", "Full Cream Milk 2L",   new BigDecimal("3.10")),
-            new Product("333", "Thick Cut Chips 175g", new BigDecimal("4.80")),
-            new Product("444", "Cadbury Dairy Milk",   new BigDecimal("5.50"))
-        );
+        catalogContainer.getChildren().clear();
+
+        List<Product> catalog = new ArrayList<>(cartService.getAllProducts());
+        catalog.sort(Comparator.comparing(Product::getBarcode));
+
+        if (catalog.isEmpty()) {
+            lblDebugStatus.setText("> WARNING: catalog is empty — check products.json / module-info.java");
+            return;
+        }
 
         for (Product product : catalog) {
             try {

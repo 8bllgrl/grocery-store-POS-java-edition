@@ -19,19 +19,22 @@ public class ProductRowController {
     @FXML private Label lblPrice;
     @FXML private Button btnScan;
 
+    // FIX: keep the barcode as data, not just text baked into a label.
+    // The previous version re-parsed it out of lblBarcodeName's displayed
+    // string ("[111]  Name" -> substring before "]"), which breaks the
+    // moment the label format ever changes (e.g. adding an icon prefix).
+    private String barcode;
     private Consumer<String> onScan;
 
     public void configure(Product product, Consumer<String> onScan) {
         this.onScan = onScan;
+        this.barcode = product.getBarcode();
         lblBarcodeName.setText("[" + product.getBarcode() + "]  " + product.getName());
         lblPrice.setText("       /$" + product.getUnitPrice() + " / unit");
     }
 
     @FXML
     void handleScan() {
-        // Extract barcode from the label text — format is "[111]  Name"
-        String text = lblBarcodeName.getText();
-        String barcode = text.substring(1, text.indexOf(']'));
-        if (onScan != null) onScan.accept(barcode);
+        if (onScan != null && barcode != null) onScan.accept(barcode);
     }
 }

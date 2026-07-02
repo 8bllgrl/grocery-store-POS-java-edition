@@ -9,6 +9,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -38,6 +39,15 @@ public class StageManager {
 
     public CustomerController getCustomerController() {
         return this.customerController;
+    }
+
+    public void setupGlobalLogging(Scene scene) {
+        scene.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
+            // Check if the target of the event is a Button
+            if (event.getTarget() instanceof javafx.scene.control.Button button) {
+                System.out.println("[LOG] Button Pressed: " + button.getText());
+            }
+        });
     }
 
     public void launchDisplays(Stage primaryStage) {
